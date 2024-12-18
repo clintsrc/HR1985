@@ -29,6 +29,7 @@ Update Employee Role
         ...
     Updated employee's role
 View All Roles
+    (see below)
 Add Role
     (2) What is the name of the role? Customer Service
     What is the salary of the role? 80000
@@ -39,6 +40,7 @@ Add Role
         Service *
     Added Customer Service to the database
 View All Departments
+    (see below)
 Add Department
     (1) What is the name of the department? Service
     Added Service to the database
