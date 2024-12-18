@@ -45,7 +45,7 @@ Add Department
 Quit
 
 
-View All Employees:
+View All Departments:
 id  name
 --  ----
 1   Engineering
