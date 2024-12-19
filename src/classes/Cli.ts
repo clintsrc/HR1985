@@ -1,6 +1,6 @@
 import Table from 'cli-table3'; // a little help with the query output here
 import inquirer from "inquirer";
-import figlet from "figlet";
+
 import { 
     addEmployeeSQL,
     updateEmployeeRoleSQL,
@@ -281,16 +281,6 @@ class Cli {
 
     // TODO
     async startCli(): Promise<void> {
-        // Welcome screen ascii art
-        console.log(
-            figlet.textSync('HR 1985', {
-                font: 'Alligator2', // You can choose a different font from figlet's options
-                horizontalLayout: 'default',
-                verticalLayout: 'default',
-            })
-        );
-        console.log('\nThe Power of the Menu at Your Fingertips!\n');
-
 
         const answers = await inquirer.prompt([
             {
@@ -327,6 +317,7 @@ class Cli {
             await this.addDepartment();
         } else if (answers.MainMenu === 'Quit') {
             // Exit the app when the user selects Quit
+            console.log("Have a nice day 🙂");
             this.exit = true;
         }
     }
