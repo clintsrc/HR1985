@@ -6,32 +6,23 @@ class Cli {
 
     // TODO
     /*     
-    Add Department
     (1) What is the name of the department? Service
     Added Service to the database
     */
-    async addDepartment(): Promise<void> {
+    async addDepartment() {
         console.log("addDepartment");
-        
+
         const answers = await inquirer.prompt([
             {
-                type: 'list',
-                name: 'selectedVehicleVin',
-                message: 'Select a vehicle to perform an action on',
-                choices: ['Truck', 'Motorbike', 'Car'],
+                type: 'input',
+                name: 'departmentName',
+                message: 'What is the name of the department?',
             },
         ]);
 
-        if (answers.selectedVehicleVin === 'Car') {
-            console.log("TODO: Perform action for Car");
-        } else if (answers.selectedVehicleVin === 'Truck') {
-            console.log("TODO: Perform action for Truck");
-        } else if (answers.selectedVehicleVin === 'Motorbike') {
-            console.log("TODO: Perform action for Motorbike");
-        } else {
-            console.log("Unexpected choice");
-        }
-
+        // TODO
+        console.log(`Added ${answers.departmentName} to the database.`);
+        
         this.startCli();
     }
     
@@ -43,29 +34,18 @@ class Cli {
     1   Engineering
     2   Finance
     3   Legal
-    4   Sales
+    4   Sales 
     */
-    async viewAllDepartments(): Promise<void> {
+    async viewAllDepartments() {
         console.log("viewAllDepartments");
-        
-        const answers = await inquirer.prompt([
-            {
-                type: 'list',
-                name: 'selectedVehicleVin',
-                message: 'Select a vehicle to perform an action on',
-                choices: ['Truck', 'Motorbike', 'Car'],
-            },
-        ]);
 
-        if (answers.selectedVehicleVin === 'Car') {
-            console.log("TODO: Perform action for Car");
-        } else if (answers.selectedVehicleVin === 'Truck') {
-            console.log("TODO: Perform action for Truck");
-        } else if (answers.selectedVehicleVin === 'Motorbike') {
-            console.log("TODO: Perform action for Motorbike");
-        } else {
-            console.log("Unexpected choice");
-        }
+        // TODO
+        console.log(`id  name
+    --  ----
+    1   Engineering
+    2   Finance
+    3   Legal
+    4   Sales`);
 
         this.startCli();
     }
@@ -80,28 +60,38 @@ class Cli {
         Finance
         ...
         Service *
-    Added Customer Service to the database */
-    async addRole(): Promise<void> {
+    Added Customer Service to the database
+    */
+    async addRole() {
         console.log("addRole");
-        
+
         const answers = await inquirer.prompt([
             {
+                type: 'input',
+                name: 'roleName',
+                message: 'What is the name of the role?',
+            },
+            {
+                type: 'input',
+                name: 'salary',
+                message: 'What is the salary of the role?',
+                validate: function (input) {
+                    if (isNaN(input)) {
+                        return 'Please enter a valid number.';
+                    }
+                    return true;
+                },
+            },
+            {
                 type: 'list',
-                name: 'selectedVehicleVin',
-                message: 'Select a vehicle to perform an action on',
-                choices: ['Truck', 'Motorbike', 'Car'],
+                name: 'department',
+                message: 'Which department does the role belong to?',
+                choices: ['Engineering', 'Finance', 'Legal', 'Sales'],
             },
         ]);
 
-        if (answers.selectedVehicleVin === 'Car') {
-            console.log("TODO: Perform action for Car");
-        } else if (answers.selectedVehicleVin === 'Truck') {
-            console.log("TODO: Perform action for Truck");
-        } else if (answers.selectedVehicleVin === 'Motorbike') {
-            console.log("TODO: Perform action for Motorbike");
-        } else {
-            console.log("Unexpected choice");
-        }
+        // TODO
+        console.log(`Added ${answers.roleName} to the database.`);
 
         this.startCli();
     }
@@ -120,27 +110,17 @@ class Cli {
     7   Legal Team Lead     Legal           250000
     8   Lawyer              Legal           190000
      */
-    async viewAllRoles(): Promise<void> {
+    async viewAllRoles() {
         console.log("viewAllRoles");
-        
-        const answers = await inquirer.prompt([
-            {
-                type: 'list',
-                name: 'selectedVehicleVin',
-                message: 'Select a vehicle to perform an action on',
-                choices: ['Truck', 'Motorbike', 'Car'],
-            },
-        ]);
 
-        if (answers.selectedVehicleVin === 'Car') {
-            console.log("TODO: Perform action for Car");
-        } else if (answers.selectedVehicleVin === 'Truck') {
-            console.log("TODO: Perform action for Truck");
-        } else if (answers.selectedVehicleVin === 'Motorbike') {
-            console.log("TODO: Perform action for Motorbike");
-        } else {
-            console.log("Unexpected choice");
-        }
+        // TODO
+        console.log(`
+        id  title               department      salary
+        --  ----                ----------      ------
+        1   Sales Lead          Sales           100000
+        2   Salesperson         Sales           80000
+        3   Lead Engineer       Engineering     150000
+        `);
 
         this.startCli();
     }
@@ -158,27 +138,26 @@ class Cli {
         ...
     Updated employee's role
     */
-    async updateEmployeeRole(): Promise<void> {
+    async updateEmployeeRole() {
         console.log("updateEmployeeRole");
 
         const answers = await inquirer.prompt([
             {
                 type: 'list',
-                name: 'selectedVehicleVin',
-                message: 'Select a vehicle to perform an action on',
-                choices: ['Truck', 'Motorbike', 'Car'],
+                name: 'employee',
+                message: "Which employee's role would you like to update?",
+                choices: ['John Doe', 'Mike Chan', 'Sarah Lourd'],
+            },
+            {
+                type: 'list',
+                name: 'newRole',
+                message: 'Which role do you want to assign to the selected employee?',
+                choices: ['Sales Lead', 'Salesperson', 'Lead Engineer'],
             },
         ]);
 
-        if (answers.selectedVehicleVin === 'Car') {
-            console.log("TODO: Perform action for Car");
-        } else if (answers.selectedVehicleVin === 'Truck') {
-            console.log("TODO: Perform action for Truck");
-        } else if (answers.selectedVehicleVin === 'Motorbike') {
-            console.log("TODO: Perform action for Motorbike");
-        } else {
-            console.log("Unexpected choice");
-        }
+        // TODO
+        console.log(`Updated ${answers.employee}'s role to ${answers.newRole}.`);
 
         this.startCli();
     }
@@ -197,28 +176,38 @@ class Cli {
         John Doe
         ...
         Ashley Rodriguez * (though not likely!!!)
-    Added Sam Kash to the database */
-    async addEmployee(): Promise<void> {
+    Added Sam Kash to the database
+    */
+    async addEmployee() {
         console.log("addEmployee");
 
         const answers = await inquirer.prompt([
             {
+                type: 'input',
+                name: 'firstName',
+                message: "What is the employee's first name?",
+            },
+            {
+                type: 'input',
+                name: 'lastName',
+                message: "What is the employee's last name?",
+            },
+            {
                 type: 'list',
-                name: 'selectedVehicleVin',
-                message: 'Select a vehicle to perform an action on',
-                choices: ['Truck', 'Motorbike', 'Car'],
+                name: 'role',
+                message: "What is the employee's role?",
+                choices: ['Sales Lead', 'Salesperson', 'Lead Engineer', 'Software Engineer'],
+            },
+            {
+                type: 'list',
+                name: 'manager',
+                message: "Who is the employee's manager?",
+                choices: ['None', 'John Doe', 'Ashley Rodriguez'],
             },
         ]);
 
-        if (answers.selectedVehicleVin === 'Car') {
-            console.log("TODO: Perform action for Car");
-        } else if (answers.selectedVehicleVin === 'Truck') {
-            console.log("TODO: Perform action for Truck");
-        } else if (answers.selectedVehicleVin === 'Motorbike') {
-            console.log("TODO: Perform action for Motorbike");
-        } else {
-            console.log("Unexpected choice");
-        }
+        // TODO
+        console.log(`Added ${answers.firstName} ${answers.lastName} to the database.`);
 
         this.startCli();
     }
@@ -236,27 +225,20 @@ class Cli {
     6   Malia       Brown       Accountant          Finance     125000  Kunal Singh
     7   Sarah       Lourd       Legal Team Lead     Legal       250000  null
     8   Tom         Allen       Lawyer              Legal       190000  Sarah Lourd
+
+    Custom:
+    9   Sam         Kash        Sales Lead          Sales       100000  Ashley Rodriguez
     */
-    async viewAllEmployees(): Promise<void> {
+    async viewAllEmployees() {
         console.log("viewAllEmployees");
-
-        const answers = await inquirer.prompt([
-            {
-                type: 'list',
-                name: 'vehicleType',
-                message: 'Select a vehicle type',
-                choices: ['Truck', 'Motorbike', 'Car'],
-            },
-        ]);
-
-        console.log("Answer received:", answers);
-        if (answers.vehicleType === 'Car') {
-            console.log("TODO: Perform action for Car");
-        } else if (answers.vehicleType === 'Truck') {
-            console.log("TODO: Perform action for Truck");
-        } else if (answers.vehicleType === 'Motorbike') {
-            console.log("TODO: Perform action for Motorbike");
-        }
+        
+        // TODO
+        console.log(`
+        id  first_name  last_name   title               department  salary  manager
+        --  ----------  ---------   -----               ----------  ------  -------
+        1   John        Doe         Sales Lead          Sales       100000  null
+        2   Mike        Chan        Salesperson         Sales       80000   John Doe
+        `);
 
         this.startCli();
     }
