@@ -1,5 +1,6 @@
 import { pool } from './connection.js';
 
+
 /*
  * getAllEmployees()
  * 
@@ -11,7 +12,7 @@ import { pool } from './connection.js';
  * Return the result in an array of records
  * 
  */
-const getAllEmployees = async () => {
+const viewAllEmployeesSQL = async () => {
     const query = `
         SELECT
             employee.id,
@@ -42,32 +43,14 @@ const getAllEmployees = async () => {
     }
 };
 
-/*
- * getAllDepartments()
- * 
- * Query the employees_db to return all departments
- * 
- * Return the result in an array of records
- * 
- */
-const getAllDepartments = async () => {
-    const query = `
-        SELECT
-            department.id,
-            department.name AS department
-        FROM
-            department
-        ORDER BY
-            department.name ASC;
-    `;
+// TODO
+const addEmployeeSQL = async () => {
+	console.error('TODO');
+};
 
-    try {
-        const result = await pool.query(query);
-        return result.rows;
-    } catch (error) {
-        console.error('Error fetching departments:', error.message);
-        throw error;
-    }
+// TODO
+const updateEmployeeRoleSQL = async () => {
+	console.error('TODO');
 };
 
 /*
@@ -79,7 +62,7 @@ const getAllDepartments = async () => {
  * Return the result in an array of records
  * 
  */
-const getAllRoles = async () => {
+const viewAllRolesSQL = async () => {
     const query = `
         SELECT
             role.id,
@@ -102,5 +85,51 @@ const getAllRoles = async () => {
         throw error;
     }
 };
+     
+// TODO
+const addRoleSQL = async () => {
+	console.error('TODO');
+};
 
-export { getAllEmployees, getAllDepartments, getAllRoles };
+/*
+ * getAllDepartments()
+ * 
+ * Query the employees_db to return all departments
+ * 
+ * Return the result in an array of records
+ * 
+ */
+const viewAllDepartmentsSQL = async () => {
+    const query = `
+        SELECT
+            department.id,
+            department.name AS department
+        FROM
+            department
+        ORDER BY
+            department.name ASC;
+    `;
+
+    try {
+        const result = await pool.query(query);
+        return result.rows;
+    } catch (error) {
+        console.error('Error fetching departments:', error.message);
+        throw error;
+    }
+};
+
+// TODO
+const addDepartmentSQL = async () => {
+	console.error('TODO');
+};
+
+export { 
+    viewAllEmployeesSQL, 
+    addEmployeeSQL, 
+    updateEmployeeRoleSQL, 
+    viewAllRolesSQL, 
+    addRoleSQL, 
+    viewAllDepartmentsSQL, 
+    addDepartmentSQL
+};

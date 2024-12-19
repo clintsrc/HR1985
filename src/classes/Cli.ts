@@ -1,6 +1,14 @@
 import Table from 'cli-table3'; // a little help with the query output here
 import inquirer from "inquirer";
-import { getAllEmployees, getAllDepartments, getAllRoles } from '../queryservice.js';
+import { 
+    addEmployeeSQL,
+    updateEmployeeRoleSQL,
+    viewAllEmployeesSQL, 
+    addRoleSQL, 
+    viewAllDepartmentsSQL,
+    addDepartmentSQL, 
+    viewAllRolesSQL
+} from '../queryservice.js';
 
 // define the Cli class
 class Cli {
@@ -23,7 +31,12 @@ class Cli {
         ]);
 
         // TODO
-        console.log(`Added ${answers.departmentName} to the database.`);
+        try {
+            const roles = await addDepartmentSQL();
+            console.log(`Added ${answers.departmentName} to the database.`);
+        } catch (error) {
+            console.error('Error fetching roles:', error.message);
+        }
         
         this.startCli();
     }
@@ -32,7 +45,7 @@ class Cli {
     async viewAllDepartments() {
 
         try {
-            const departments = await getAllDepartments();
+            const departments = await viewAllDepartmentsSQL();
     
             // prepare the header format
             const table = new Table({
@@ -97,7 +110,12 @@ class Cli {
         ]);
 
         // TODO
-        console.log(`Added ${answers.roleName} to the database.`);
+        try {
+            const roles = await addRoleSQL();
+            console.log(`Added ${answers.roleName} to the database.`);
+        } catch (error) {
+            console.error('Error fetching roles:', error.message);
+        }
 
         this.startCli();
     }
@@ -106,7 +124,7 @@ class Cli {
     async viewAllRoles() {
     
         try {
-            const roles = await getAllRoles();
+            const roles = await viewAllRolesSQL();
     
             // prepare the header format
             const table = new Table({
@@ -161,7 +179,12 @@ class Cli {
         ]);
 
         // TODO
-        console.log(`Updated ${answers.employee}'s role to ${answers.newRole}.`);
+        try {
+            const roles = await updateEmployeeRoleSQL();
+            console.log(`Updated ${answers.employee}'s role to ${answers.newRole}.`);
+        } catch (error) {
+            console.error('Error fetching roles:', error.message);
+        }
 
         this.startCli();
     }
@@ -211,8 +234,13 @@ class Cli {
         ]);
 
         // TODO
-        console.log(`Added ${answers.firstName} ${answers.lastName} to the database.`);
-
+        try {
+            const roles = await addEmployeeSQL();
+            console.log(`Added ${answers.firstName} ${answers.lastName} to the database.`);
+        } catch (error) {
+            console.error('Error fetching roles:', error.message);
+        }
+    
         this.startCli();
     }
 
@@ -220,7 +248,7 @@ class Cli {
     async viewAllEmployees() {
 
         try {
-            const employees = await getAllEmployees();
+            const employees = await viewAllEmployeesSQL();
         
             // prepare the header format
             const table = new Table({
