@@ -1,4 +1,6 @@
+import Table from 'cli-table3'; // a little help with the query output here
 import inquirer from "inquirer";
+import { getAllEmployees, getAllDepartments, getAllRoles } from '../queryservice.js';
 
 // define the Cli class
 class Cli {
@@ -27,26 +29,30 @@ class Cli {
     }
     
     // TODO
-    /*     
-    View All Departments:
-    id  name
-    --  ----
-    1   Engineering
-    2   Finance
-    3   Legal
-    4   Sales 
-    */
     async viewAllDepartments() {
-        console.log("viewAllDepartments");
 
-        // TODO
-        console.log(`id  name
-    --  ----
-    1   Engineering
-    2   Finance
-    3   Legal
-    4   Sales`);
+        try {
+            const departments = await getAllDepartments();
+    
+            // prepare the header format
+            const table = new Table({
+                head: ['ID', 'Department Name'],
+                colWidths: [10, 30]
+            });
+    
+            // update the table with each dapartment record that was returned
+            departments.forEach(department => {
+                table.push([department.id, department.department]);
+            });
+    
+            // show the table
+            console.log(table.toString());
+    
+        } catch (error) {
+            console.error('Error fetching departments:', error.message);
+        }
 
+        // return to the main menu
         this.startCli();
     }
 
@@ -97,31 +103,29 @@ class Cli {
     }
 
     // TODO
-    /*     
-    View All Roles:
-    id  title               department      salary
-    --  ----                ----------      ------
-    1   Sales Lead          Sales           100000
-    2   Salesperson         Sales           80000
-    3   Lead Engineer       Engineering     150000
-    4   Software Engineer   Engineering     120000
-    5   Account Manager     Finance         160000
-    6   Accountant          Finance         125000
-    7   Legal Team Lead     Legal           250000
-    8   Lawyer              Legal           190000
-     */
     async viewAllRoles() {
-        console.log("viewAllRoles");
-
-        // TODO
-        console.log(`
-        id  title               department      salary
-        --  ----                ----------      ------
-        1   Sales Lead          Sales           100000
-        2   Salesperson         Sales           80000
-        3   Lead Engineer       Engineering     150000
-        `);
-
+    
+        try {
+            const roles = await getAllRoles();
+    
+            // prepare the header format
+            const table = new Table({
+                head: ['ID', 'Title', 'Department', 'Salary'], // Table headers
+                colWidths: [10, 20, 20, 10] // Adjust column widths as needed
+            });
+    
+            // update the table with each role record that was returned
+            roles.forEach(role => {
+                table.push([role.id, role.title, role.department, role.salary]); // Add role info as a row
+            });
+    
+            // show the table
+            console.log(table.toString()); // Render the table to the console
+        } catch (error) {
+            console.error('Error fetching roles:', error.message);
+        }
+    
+        // return to the main menu
         this.startCli();
     }
 
@@ -213,33 +217,36 @@ class Cli {
     }
 
     // TODO
-    /*
-    View All Employees
-    id  first_name  last_name   title               department  salary  manager
-    --  ----------  ---------   -----               ----------  ------  -------
-    1   John        Doe         Sales Lead          Sales       100000  null
-    2   Mike        Chan        Salesperson         Sales       80000   John Doe
-    3   Ashley      Rodriguez   Lead Engineer       Engineering 150000  null
-    4   Kevin       Tupik       Software Engineer   Engineering 120000  Ashley Rodriguez
-    5   Kunal       Singh       Account Manager     Finance     160000  null
-    6   Malia       Brown       Accountant          Finance     125000  Kunal Singh
-    7   Sarah       Lourd       Legal Team Lead     Legal       250000  null
-    8   Tom         Allen       Lawyer              Legal       190000  Sarah Lourd
-
-    Custom:
-    9   Sam         Kash        Sales Lead          Sales       100000  Ashley Rodriguez
-    */
     async viewAllEmployees() {
-        console.log("viewAllEmployees");
-        
-        // TODO
-        console.log(`
-        id  first_name  last_name   title               department  salary  manager
-        --  ----------  ---------   -----               ----------  ------  -------
-        1   John        Doe         Sales Lead          Sales       100000  null
-        2   Mike        Chan        Salesperson         Sales       80000   John Doe
-        `);
 
+        try {
+            const employees = await getAllEmployees();
+        
+            // prepare the header format
+            const table = new Table({
+                head: ['ID', 'First Name', 'Last Name', 'Title', 'Department', 'Salary', 'Manager'],
+                colWidths: [10, 15, 15, 20, 20, 10, 30],
+            });
+        
+            // update the table with each employee record that was returned
+            employees.forEach(employee => {
+                table.push([employee.id, 
+                            employee.first_name, 
+                            employee.last_name, 
+                            employee.title, 
+                            employee.department, 
+                            employee.salary, 
+                            employee.manager]);
+            });
+        
+            // show the table
+            console.log(table.toString());
+        
+        } catch (error) {
+            console.error('Error fetching employees:', error.message);
+        }
+
+        // return to the main menu
         this.startCli();
     }
 
@@ -279,7 +286,7 @@ class Cli {
         } else if (answers.MainMenu === 'Add Department') {
             await this.addDepartment();
         } else if (answers.MainMenu === 'Quit') {
-            // Exit the CLI if the user selects Quit
+            // Exit the app when the user selects Quit
             this.exit = true;
         }
     }
