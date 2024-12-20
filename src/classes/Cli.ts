@@ -1,5 +1,6 @@
 import Table from 'cli-table3'; // a little help with the query output here
 import inquirer from "inquirer";
+import { pool } from './../connection.js';
 
 import { 
     addEmployeeSQL,
@@ -320,7 +321,7 @@ class Cli {
         } else if (answers.MainMenu === 'Quit') {
             // Exit the app when the user selects Quit
             console.log("Have a nice day 🙂");
-            this.exit = true;
+            pool.end();
         }
     }
 }
