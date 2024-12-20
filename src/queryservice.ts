@@ -87,9 +87,27 @@ const viewAllRolesSQL = async () => {
 };
      
 // TODO
-const addRoleSQL = async () => {
-	console.error('TODO');
+const addRoleSQL = async (
+    roleTitle: string,
+    roleSalary: number,
+    departmentName: string
+): Promise<void> => {
+    const query = `
+        INSERT INTO role (title, salary, department_id)
+        VALUES ($2, $3, (SELECT id FROM department WHERE name = $1));
+    `;
+
+    const params = [departmentName, roleTitle, roleSalary];
+
+    try {
+        await pool.query(query, params);
+        console.log(`Role "${roleTitle}" added successfully in the "${departmentName}" department.`);
+    } catch (error) {
+        console.error('Error adding role:', error.message);
+        throw error;
+    }
 };
+
 
 /*
  * getAllDepartments()

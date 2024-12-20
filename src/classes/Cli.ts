@@ -85,35 +85,37 @@ class Cli {
     async addRole() {
         console.log("addRole");
 
+        const departments = await viewAllDepartmentsSQL();
+
         const answers = await inquirer.prompt([
             {
-                type: 'input',
-                name: 'roleName',
-                message: 'What is the name of the role?',
+            type: 'input',
+            name: 'roleTitle',
+            message: 'What is the name of the role?',
             },
             {
-                type: 'input',
-                name: 'salary',
-                message: 'What is the salary of the role?',
-                validate: function (input) {
-                    if (isNaN(input)) {
-                        return 'Please enter a valid number.';
-                    }
-                    return true;
-                },
+            type: 'input',
+            name: 'roleSalary',
+            message: 'What is the salary of the role?',
+            validate: function (input) {
+                if (isNaN(input)) {
+                return 'Please enter a valid number.';
+                }
+                return true;
+            },
             },
             {
-                type: 'list',
-                name: 'department',
-                message: 'Which department does the role belong to?',
-                choices: ['Engineering', 'Finance', 'Legal', 'Sales'],
+            type: 'list',
+            name: 'departmentName',
+            message: 'Which department does the role belong to?',
+            choices: departments.map(department => department.department),
             },
         ]);
 
         // TODO
         try {
-            const roles = await addRoleSQL();
-            console.log(`Added ${answers.roleName} to the database.`);
+            const roles = await addRoleSQL(answers.roleTitle, answers.roleSalary, answers.departmentName);
+            console.log(`Added ${answers.roleTitle} to the database.`);
         } catch (error) {
             console.error('Error fetching roles:', error.message);
         }
