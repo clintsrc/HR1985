@@ -1,6 +1,6 @@
 import { pool } from './connection.js';
 
-const DEBUG = true;
+const DEBUG = true; // TODO - change for final checkin
 
 /*
  * getAllEmployees()
@@ -38,7 +38,7 @@ const viewAllEmployeesSQL = async () => {
     try {
         const result = await pool.query(query);
         if (DEBUG) {
-            console.info(`viewAllEmployeesSQL: success`);
+            console.info(`viewAllEmployeesSQL: success\n${query}`);
         }
         return result.rows;
     } catch (error) {
@@ -82,7 +82,7 @@ const addEmployeeSQL = async (
         await pool.query(query, params);
 
         if (DEBUG) {
-            console.log(`addEmployeeSQL: Employee successfully added: ${firstName} ${lastName}, ${roleTitle}, ${managerName}.`);
+            console.log(`addEmployeeSQL: Employee successfully added: ${firstName} ${lastName}, ${roleTitle}, ${managerName}.\n${query}`);
         }
     } catch (error) {
         console.error('Error adding employee:', error.message);
@@ -92,12 +92,29 @@ const addEmployeeSQL = async (
 
 
 // TODO
-/* if (DEBUG) {
-    console.info(`FXNAME: success`);
-} */
-const updateEmployeeRoleSQL = async () => {
-	console.error('TODO');
-};
+const updateEmployeeRoleSQL = async (
+    newRole: string,
+    employeeName: string
+): Promise<void> => {
+    const query = `
+        UPDATE employee
+        SET role_id = (SELECT id FROM role WHERE title = $1)
+        WHERE CONCAT(first_name, ' ', last_name) = $2;
+    `;
+    
+    try {
+        const res = await pool.query(query, [newRole, employeeName]);
+
+        if (DEBUG) {
+            console.log(`updateEmployeeRoleSQL: ${newRole} ${employeeName}\nRecords changed: ${res.rowCount}\n${query}\n${query}`);
+        }
+        
+    } catch (error) {
+        console.error('Error updating employee role:', error.message);
+        throw error;
+    }
+}
+
 
 /*
  * getAllRoles()
@@ -124,7 +141,7 @@ const viewRolesSQL = async (columns = ['role.id', 'role.title', 'department.name
         const result = await pool.query(query);
         
         if (DEBUG) {
-            console.info(`viewRolesSQL: success`);
+            console.info(`viewRolesSQL: success\n${query}`);
         }
 
         return result.rows;
@@ -151,7 +168,7 @@ const addRoleSQL = async (
         await pool.query(query, params);
         
         if (DEBUG) {
-            console.log(`addRoleSQL: Role "${roleTitle}" added successfully in the "${departmentName}" department.`);
+            console.log(`addRoleSQL: Role "${roleTitle}" added successfully in the "${departmentName}" department.\n${query}`);
         }
 
     } catch (error) {
@@ -184,7 +201,7 @@ const viewAllDepartmentsSQL = async () => {
         const result = await pool.query(query);
         
         if (DEBUG) {
-            console.info(`viewAllDepartmentsSQL: success`);
+            console.info(`viewAllDepartmentsSQL: success\n${query}`);
         }
 
         return result.rows;
@@ -208,7 +225,7 @@ const addDepartmentSQL = async (
         await pool.query(query, params);
 
         if (DEBUG) {
-            console.log(`addDepartmentSQL: Added "${departmentName}" to the database.`);
+            console.log(`addDepartmentSQL: Added "${departmentName}" to the database.\n${query}`);
         }
         
     } catch (error) {
@@ -237,7 +254,7 @@ const getAllManagers = async () => {
     try {
         const result = await pool.query(query);
         if (DEBUG) {
-            console.info(`getAllManagers: success`);
+            console.info(`getAllManagers: success\n${query}`);
         }
         return result.rows;
     } catch (error) {

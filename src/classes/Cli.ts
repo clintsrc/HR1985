@@ -1,10 +1,10 @@
-import Table from 'cli-table3'; // a little help with the query output here
+import Table from 'cli-table3'; // a little help with the console table output here
 import inquirer from "inquirer";
 import { pool } from '../connection.js';
 
 import { 
-    addEmployeeSQL, //  todo
-    updateEmployeeRoleSQL,  //  todo
+    addEmployeeSQL,
+    updateEmployeeRoleSQL,
     viewAllEmployeesSQL, 
     addRoleSQL, 
     viewAllDepartmentsSQL,
@@ -19,7 +19,6 @@ class Cli {
 
     // TODO
     async addDepartment() {
-
         const answers = await inquirer.prompt([
             {
                 type: 'input',
@@ -68,8 +67,7 @@ class Cli {
 
     // TODO
     async addRole() {
-        console.log("addRole");
-
+        // Get data to populate the prompt info
         const departments = await viewAllDepartmentsSQL();
 
         const answers = await inquirer.prompt([
@@ -135,21 +133,8 @@ class Cli {
     }
 
     // TODO
-    /*     
-    (4) Which employee's role would you like to update? (use arrow keys)
-        John Doe
-        Mike Chan
-        ...
-        Sam Kash *
-    Which role do you want to assign the selected employee? (use arrow keys)
-        Sales Lead *
-        Salesperson
-        ...
-    Updated employee's role
-    */
     async updateEmployeeRole() {
-        console.log("updateEmployeeRole");
-
+        // Get data to populate the prompt info
         const employees = await viewAllEmployeesSQL();
         const roles = await viewRolesSQL();
 
@@ -168,21 +153,19 @@ class Cli {
             },
         ]);
 
-        // TODO
         try {
-            const roles = await updateEmployeeRoleSQL();
+            await updateEmployeeRoleSQL(answers.newRole, answers.employee);
             console.log(`Updated ${answers.employee}'s role to ${answers.newRole}.`);
         } catch (error) {
             console.error('Error fetching roles:', error.message);
         }
 
+        // return to the main menu
         this.startCli();
     }
 
     // TODO
-    async addEmployee() {
-        console.log("addEmployee");
-    
+    async addEmployee() {   
         // Get data to populate the prompt info
         const roles = await viewRolesSQL();
         const managers = await getAllManagers();
@@ -266,7 +249,6 @@ class Cli {
 
     // TODO
     async startCli(): Promise<void> {
-
         const answers = await inquirer.prompt([
             {
                 type: 'list',
