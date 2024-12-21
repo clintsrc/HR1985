@@ -1,6 +1,20 @@
+/*
+ * Cli
+ *
+ * This class drives the command line prompt interaction to interface
+ * with the PostgreSQL employee tracking database. It is responsible for 
+ * connecting to and disconnecting from the database. When connected it
+ * interacts with the user through command line prompts via the inquirer npm 
+ * package. It uses the queryservice module to load options into the menu 
+ * choices where necessary and also to handle the SQL transactions.
+ * 
+ */
+
 import Table from 'cli-table3'; // a little help with the console table output here
 import inquirer from "inquirer";
-import { pool } from '../connection.js';
+import { connectToDb, disconnectFromDb } from '../connection.js';
+
+await connectToDb();
 
 import { 
     addEmployeeSQL,
@@ -284,8 +298,8 @@ class Cli {
             await this.addDepartment();
         } else if (answers.MainMenu === 'Quit') {
             // Exit the app when the user selects Quit
-            console.log("Have a nice day 🙂");
-            pool.end();
+            disconnectFromDb();
+            process.exit(0);  // This ensures the app terminates after disconnecting
         }
     }
 }

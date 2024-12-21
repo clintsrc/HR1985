@@ -1,3 +1,12 @@
+/*
+ * queryservice
+ *
+ * This module uses the pg module connection pool to interface with a 
+ * PostgreSQL database and manage employee data. The necessary SQL functions 
+ * are exported to a command line class where the user can select which 
+ * operations to perform on the employee data
+ * 
+ */
 import { pool } from './connection.js';
 
 const DEBUG = true; // TODO - change for final checkin
