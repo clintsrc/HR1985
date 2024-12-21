@@ -180,27 +180,14 @@ class Cli {
     }
 
     // TODO
-    /*  
-    (3) What is the employee's first name? Sam
-    What is the employee's last name? Kash
-    What is the employee's role? (use arrow keys)
-        Salesperson
-        Lead Engineer
-        ...
-        Customer Service *
-    Who is the employee's manager? (use arrow keys)
-        None
-        John Doe
-        ...
-        Ashley Rodriguez * (though not likely!!!)
-    Added Sam Kash to the database
-    */
     async addEmployee() {
         console.log("addEmployee");
-
+    
+        // Get data to populate the prompt info
         const roles = await viewRolesSQL();
         const managers = await getAllManagers();
-
+    
+        // Prompt user for input
         const answers = await inquirer.prompt([
             {
                 type: 'input',
@@ -222,21 +209,26 @@ class Cli {
                 type: 'list',
                 name: 'manager',
                 message: "Who is the employee's manager?",
-                // the spec supports no manager, so None is called out first
                 choices: ['None', ...managers.map(manager => `${manager.manager}`)],
             },
         ]);
-
-        // TODO
+    
         try {
-            const roles = await addEmployeeSQL();
+            await addEmployeeSQL(
+                answers.firstName,
+                answers.lastName,
+                answers.role,
+                answers.manager
+            );
             console.log(`Added ${answers.firstName} ${answers.lastName} to the database.`);
         } catch (error) {
-            console.error('Error fetching roles:', error.message);
+            console.error('Error adding employee:', error.message);
         }
     
+        // return to the main menu
         this.startCli();
     }
+    
 
     // TODO
     async viewAllEmployees() {

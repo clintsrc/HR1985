@@ -1,5 +1,6 @@
 import { pool } from './connection.js';
 
+const DEBUG = true;
 
 /*
  * getAllEmployees()
@@ -36,6 +37,9 @@ const viewAllEmployeesSQL = async () => {
 
     try {
         const result = await pool.query(query);
+        if (DEBUG) {
+            console.info(`viewAllEmployeesSQL: success`);
+        }
         return result.rows;
     } catch (error) {
         console.error('Error fetching employees:', error.message);
@@ -44,11 +48,53 @@ const viewAllEmployeesSQL = async () => {
 };
 
 // TODO
-const addEmployeeSQL = async () => {
-	console.error('TODO');
+/*
+ * addEmployeeSQL()
+ *
+ * Query notes:
+ * - A subquery determines the role title
+ * - A CASE statement is used to handle when the manager is not specified ('None'
+ *   meaning NULL)
+ * - revisit for better error handling
+ * 
+ */
+const addEmployeeSQL = async (
+    firstName: string,
+    lastName: string,
+    roleTitle: string,
+    managerName: string | null
+): Promise<void> => {
+    const query = `
+        INSERT INTO employee (first_name, last_name, role_id, manager_id)
+        VALUES (
+            $1, 
+            $2, 
+            (SELECT id FROM role WHERE title = $3),
+            CASE 
+                WHEN $4 = 'None' THEN NULL 
+                ELSE (SELECT id FROM employee WHERE CONCAT(first_name, ' ', last_name) = $4)
+            END
+        );
+    `;
+    const params = [firstName, lastName, roleTitle, managerName];
+
+    try {
+        await pool.query(query, params);
+
+        if (DEBUG) {
+            console.log(`addEmployeeSQL: Employee successfully added: ${firstName} ${lastName}, ${roleTitle}, ${managerName}.`);
+        }
+    } catch (error) {
+        console.error('Error adding employee:', error.message);
+        throw error;
+    }
 };
 
+
 // TODO
+/* if (DEBUG) {
+    console.info(`FXNAME: success`);
+} */
 const updateEmployeeRoleSQL = async () => {
 	console.error('TODO');
 };
@@ -76,6 +122,11 @@ const viewRolesSQL = async (columns = ['role.id', 'role.title', 'department.name
 
     try {
         const result = await pool.query(query);
+        
+        if (DEBUG) {
+            console.info(`viewRolesSQL: success`);
+        }
+
         return result.rows;
     } catch (error) {
         console.error('Error fetching roles:', error.message);
@@ -98,7 +149,11 @@ const addRoleSQL = async (
 
     try {
         await pool.query(query, params);
-        console.log(`Role "${roleTitle}" added successfully in the "${departmentName}" department.`);
+        
+        if (DEBUG) {
+            console.log(`addRoleSQL: Role "${roleTitle}" added successfully in the "${departmentName}" department.`);
+        }
+
     } catch (error) {
         console.error('Error adding role:', error.message);
         throw error;
@@ -127,6 +182,11 @@ const viewAllDepartmentsSQL = async () => {
 
     try {
         const result = await pool.query(query);
+        
+        if (DEBUG) {
+            console.info(`viewAllDepartmentsSQL: success`);
+        }
+
         return result.rows;
     } catch (error) {
         console.error('Error fetching departments:', error.message);
@@ -146,7 +206,11 @@ const addDepartmentSQL = async (
 
     try {
         await pool.query(query, params);
-        console.log(`Added "${departmentName}" to the database.`);
+
+        if (DEBUG) {
+            console.log(`addDepartmentSQL: Added "${departmentName}" to the database.`);
+        }
+        
     } catch (error) {
         console.error('Error adding department:', error.message);
         throw error;
@@ -172,6 +236,9 @@ const getAllManagers = async () => {
 
     try {
         const result = await pool.query(query);
+        if (DEBUG) {
+            console.info(`getAllManagers: success`);
+        }
         return result.rows;
     } catch (error) {
         console.error('Error fetching managers:', error.message);
