@@ -12,7 +12,8 @@ VALUES
 
 
 
-/*  Add Role
+/*
+Add Role
     (2) What is the name of the role? Customer Service
     What is the salary of the role? 80000
     Which department does the role belong to? (use arrow keys)
@@ -20,7 +21,9 @@ VALUES
         Finance
         ...
         Service *
-    Added Customer Service to the database */
+    Added Customer Service to the database
+*/
+
 /* DO $$
 DECLARE
     dept_id INT;  -- Declare a variable to hold the department ID
@@ -33,11 +36,13 @@ BEGIN
         role (title, salary, department_id)
     VALUES
         ('Technical Writer', 60000, dept_id);
-END $$; */
+END $$;
+*/
 
 
 
-/*  Add Employee
+/*  
+Add Employee
     (3) What is the employee's first name? Sam
     What is the employee's last name? Kash
     What is the employee's role? (use arrow keys)
@@ -50,7 +55,8 @@ END $$; */
         John Doe
         ...
         Ashley Rodriguez * (though not likely!!!)
-    Added Sam Kash to the database */
+    Added Sam Kash to the database
+*/
 
 /* 
 DO $$
@@ -79,10 +85,13 @@ BEGIN
     -- Insert a new employee using the captured IDs
     INSERT INTO employee (first_name, last_name, role_id, manager_id)
     VALUES ('Paul', 'McCartney', role_id_value, manager_id_value);
-END $$; */
+END $$;
+*/
 
 
-/* Update Employee Role
+
+/*
+ Update Employee Role
     (4) Which employee's role would you like to update? (use arrow keys)
         John Doe
         Mike Chan
@@ -92,11 +101,14 @@ END $$; */
         Sales Lead *
         Salesperson
         ...
-    Updated employee's role */
+    Updated employee's role
+*/
 
+/*
 UPDATE employee
 SET role_id = 5
 WHERE first_name = 'John' AND last_name = 'Lennon';
+ */
 
 
 

@@ -1,5 +1,19 @@
-import Table from 'cli-table3'; // a little help with the query output here
+/*
+ * CLI
+ *
+ * This class drives the command line prompt interaction to interface
+ * with the PostgreSQL employee tracking database. It is responsible for 
+ * managing the lifecycle of connecting to and disconnecting from the database. 
+ * When connected the CLI interacts with the user through command line prompts 
+ * via the inquirer npm package. It uses the queryservice module in order to 
+ * load dynamically changing menu choice options where needed, and makes the
+ * calls to the SQL transactions.
+ * 
+ */
+
+import Table from 'cli-table3'; // a little help with the console table output here
 import inquirer from "inquirer";
+import { connectToDb, disconnectFromDb } from '../connection.js';
 
 import { 
     addEmployeeSQL,
@@ -8,21 +22,59 @@ import {
     addRoleSQL, 
     viewAllDepartmentsSQL,
     addDepartmentSQL, 
-    viewAllRolesSQL
+    viewRolesSQL,
+    getAllManagers
 } from '../queryservice.js';
 
 // define the Cli class
 class Cli {
     exit: boolean = false;
 
-    // TODO
-    /*     
-    (1) What is the name of the department? Service
-    Added Service to the database
-    */
-    async addDepartment() {
-        console.log("addDepartment");
+    constructor() {
+        // connect to the database first
+        this.startDbConnection();
+    }
 
+    /*
+     *
+     * The CLI is s responsible for requesting the database connection
+     * before any SQL requests can be made
+     * 
+     */
+    async startDbConnection() {
+        try {
+            await connectToDb();
+        } catch (error) {
+            console.error("Failed to connect to the database:", error.message);
+            process.exit(1); // Exit immediately if the connection fails
+        }
+    }
+
+    /*
+     *
+     * The CLI is responsible for requesting the database disconnect when
+     * the user is finished
+     * 
+     */
+    async disconnectDb() {
+        try {
+            await disconnectFromDb();
+            console.log("Have a nice day 🙂");
+        } catch (error) {
+            console.error("Error disconnecting from the database:", error.message);
+        }
+    }
+
+    // Make sure to close the connection cleanly when user selects Quit
+    async quitApp() {
+        // disconnect from the database
+        await this.disconnectDb();
+        // exit the application itself
+        process.exit(0);
+    }
+    
+    // TODO
+    async addDepartment() {
         const answers = await inquirer.prompt([
             {
                 type: 'input',
@@ -31,9 +83,8 @@ class Cli {
             },
         ]);
 
-        // TODO
         try {
-            const roles = await addDepartmentSQL();
+            const roles = await addDepartmentSQL(answers.departmentName);
             console.log(`Added ${answers.departmentName} to the database.`);
         } catch (error) {
             console.error('Error fetching roles:', error.message);
@@ -71,20 +122,8 @@ class Cli {
     }
 
     // TODO
-    /*     
-    Add Role
-    (2) What is the name of the role? Customer Service
-    What is the salary of the role? 80000
-    Which department does the role belong to? (use arrow keys)
-        Engineering
-        Finance
-        ...
-        Service *
-    Added Customer Service to the database
-    */
     async addRole() {
-        console.log("addRole");
-
+        // Get data to populate the prompt info
         const departments = await viewAllDepartmentsSQL();
 
         const answers = await inquirer.prompt([
@@ -112,7 +151,6 @@ class Cli {
             },
         ]);
 
-        // TODO
         try {
             const roles = await addRoleSQL(answers.roleTitle, answers.roleSalary, answers.departmentName);
             console.log(`Added ${answers.roleTitle} to the database.`);
@@ -127,7 +165,7 @@ class Cli {
     async viewAllRoles() {
     
         try {
-            const roles = await viewAllRolesSQL();
+            const roles = await viewRolesSQL();
     
             // prepare the header format
             const table = new Table({
@@ -151,66 +189,44 @@ class Cli {
     }
 
     // TODO
-    /*     
-    (4) Which employee's role would you like to update? (use arrow keys)
-        John Doe
-        Mike Chan
-        ...
-        Sam Kash *
-    Which role do you want to assign the selected employee? (use arrow keys)
-        Sales Lead *
-        Salesperson
-        ...
-    Updated employee's role
-    */
     async updateEmployeeRole() {
-        console.log("updateEmployeeRole");
+        // Get data to populate the prompt info
+        const employees = await viewAllEmployeesSQL();
+        const roles = await viewRolesSQL();
 
         const answers = await inquirer.prompt([
             {
-                type: 'list',
-                name: 'employee',
-                message: "Which employee's role would you like to update?",
-                choices: ['John Doe', 'Mike Chan', 'Sarah Lourd'],
+            type: 'list',
+            name: 'employee',
+            message: "Which employee's role would you like to update?",
+            choices: employees.map(employee => `${employee.first_name} ${employee.last_name}`),
             },
             {
-                type: 'list',
-                name: 'newRole',
-                message: 'Which role do you want to assign to the selected employee?',
-                choices: ['Sales Lead', 'Salesperson', 'Lead Engineer'],
+            type: 'list',
+            name: 'newRole',
+            message: 'Which role do you want to assign to the selected employee?',
+            choices: roles.map(role => role.title),
             },
         ]);
 
-        // TODO
         try {
-            const roles = await updateEmployeeRoleSQL();
+            await updateEmployeeRoleSQL(answers.newRole, answers.employee);
             console.log(`Updated ${answers.employee}'s role to ${answers.newRole}.`);
         } catch (error) {
             console.error('Error fetching roles:', error.message);
         }
 
+        // return to the main menu
         this.startCli();
     }
 
     // TODO
-    /*  
-    (3) What is the employee's first name? Sam
-    What is the employee's last name? Kash
-    What is the employee's role? (use arrow keys)
-        Salesperson
-        Lead Engineer
-        ...
-        Customer Service *
-    Who is the employee's manager? (use arrow keys)
-        None
-        John Doe
-        ...
-        Ashley Rodriguez * (though not likely!!!)
-    Added Sam Kash to the database
-    */
-    async addEmployee() {
-        console.log("addEmployee");
-
+    async addEmployee() {   
+        // Get data to populate the prompt info
+        const roles = await viewRolesSQL();
+        const managers = await getAllManagers();
+    
+        // Prompt user for input
         const answers = await inquirer.prompt([
             {
                 type: 'input',
@@ -226,26 +242,32 @@ class Cli {
                 type: 'list',
                 name: 'role',
                 message: "What is the employee's role?",
-                choices: ['Sales Lead', 'Salesperson', 'Lead Engineer', 'Software Engineer'],
+                choices: roles.map(role => role.title),
             },
             {
                 type: 'list',
                 name: 'manager',
                 message: "Who is the employee's manager?",
-                choices: ['None', 'John Doe', 'Ashley Rodriguez'],
+                choices: ['None', ...managers.map(manager => `${manager.manager}`)],
             },
         ]);
-
-        // TODO
+    
         try {
-            const roles = await addEmployeeSQL();
+            await addEmployeeSQL(
+                answers.firstName,
+                answers.lastName,
+                answers.role,
+                answers.manager
+            );
             console.log(`Added ${answers.firstName} ${answers.lastName} to the database.`);
         } catch (error) {
-            console.error('Error fetching roles:', error.message);
+            console.error('Error adding employee:', error.message);
         }
     
+        // return to the main menu
         this.startCli();
     }
+    
 
     // TODO
     async viewAllEmployees() {
@@ -283,7 +305,6 @@ class Cli {
 
     // TODO
     async startCli(): Promise<void> {
-
         const answers = await inquirer.prompt([
             {
                 type: 'list',
@@ -319,8 +340,7 @@ class Cli {
             await this.addDepartment();
         } else if (answers.MainMenu === 'Quit') {
             // Exit the app when the user selects Quit
-            console.log("Have a nice day 🙂");
-            this.exit = true;
+            await this.quitApp();
         }
     }
 }

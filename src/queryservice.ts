@@ -1,5 +1,15 @@
+/*
+ * queryservice
+ *
+ * This module uses the pg module's connection pool to interface with a 
+ * PostgreSQL database and manage employee data. The necessary SQL functions 
+ * are exported to a command line class where the user can select which 
+ * operations to perform on the employee data
+ * 
+ */
 import { pool } from './connection.js';
 
+const DEBUG = true; // TODO - change for final checkin
 
 /*
  * getAllEmployees()
@@ -36,6 +46,9 @@ const viewAllEmployeesSQL = async () => {
 
     try {
         const result = await pool.query(query);
+        if (DEBUG) {
+            console.info(`viewAllEmployeesSQL: success\n${query}`);
+        }
         return result.rows;
     } catch (error) {
         console.error('Error fetching employees:', error.message);
@@ -44,14 +57,73 @@ const viewAllEmployeesSQL = async () => {
 };
 
 // TODO
-const addEmployeeSQL = async () => {
-	console.error('TODO');
+/*
+ * addEmployeeSQL()
+ *
+ * Query notes:
+ * - A subquery determines the role title
+ * - A CASE statement is used to handle when the manager is not specified ('None'
+ *   meaning NULL)
+ * - revisit for better error handling
+ * 
+ */
+const addEmployeeSQL = async (
+    firstName: string,
+    lastName: string,
+    roleTitle: string,
+    managerName: string | null
+): Promise<void> => {
+    const query = `
+        INSERT INTO employee (first_name, last_name, role_id, manager_id)
+        VALUES (
+            $1, 
+            $2, 
+            (SELECT id FROM role WHERE title = $3),
+            CASE 
+                WHEN $4 = 'None' THEN NULL 
+                ELSE (SELECT id FROM employee WHERE CONCAT(first_name, ' ', last_name) = $4)
+            END
+        );
+    `;
+    const params = [firstName, lastName, roleTitle, managerName];
+
+    try {
+        await pool.query(query, params);
+
+        if (DEBUG) {
+            console.log(`addEmployeeSQL: Employee successfully added: ${firstName} ${lastName}, ${roleTitle}, ${managerName}.\n${query}`);
+        }
+    } catch (error) {
+        console.error('Error adding employee:', error.message);
+        throw error;
+    }
 };
 
+
 // TODO
-const updateEmployeeRoleSQL = async () => {
-	console.error('TODO');
-};
+const updateEmployeeRoleSQL = async (
+    newRole: string,
+    employeeName: string
+): Promise<void> => {
+    const query = `
+        UPDATE employee
+        SET role_id = (SELECT id FROM role WHERE title = $1)
+        WHERE CONCAT(first_name, ' ', last_name) = $2;
+    `;
+    
+    try {
+        const res = await pool.query(query, [newRole, employeeName]);
+
+        if (DEBUG) {
+            console.log(`updateEmployeeRoleSQL: ${newRole} ${employeeName}\nRecords changed: ${res.rowCount}\n${query}\n${query}`);
+        }
+        
+    } catch (error) {
+        console.error('Error updating employee role:', error.message);
+        throw error;
+    }
+}
+
 
 /*
  * getAllRoles()
@@ -62,13 +134,10 @@ const updateEmployeeRoleSQL = async () => {
  * Return the result in an array of records
  * 
  */
-const viewAllRolesSQL = async () => {
+const viewRolesSQL = async (columns = ['role.id', 'role.title', 'department.name AS department', 'role.salary']) => {
     const query = `
         SELECT
-            role.id,
-            role.title,
-            department.name AS department,
-            role.salary
+            ${columns.join(', ')}
         FROM
             role
         JOIN 
@@ -79,6 +148,11 @@ const viewAllRolesSQL = async () => {
 
     try {
         const result = await pool.query(query);
+        
+        if (DEBUG) {
+            console.info(`viewRolesSQL: success\n${query}`);
+        }
+
         return result.rows;
     } catch (error) {
         console.error('Error fetching roles:', error.message);
@@ -101,7 +175,11 @@ const addRoleSQL = async (
 
     try {
         await pool.query(query, params);
-        console.log(`Role "${roleTitle}" added successfully in the "${departmentName}" department.`);
+        
+        if (DEBUG) {
+            console.log(`addRoleSQL: Role "${roleTitle}" added successfully in the "${departmentName}" department.\n${query}`);
+        }
+
     } catch (error) {
         console.error('Error adding role:', error.message);
         throw error;
@@ -130,6 +208,11 @@ const viewAllDepartmentsSQL = async () => {
 
     try {
         const result = await pool.query(query);
+        
+        if (DEBUG) {
+            console.info(`viewAllDepartmentsSQL: success\n${query}`);
+        }
+
         return result.rows;
     } catch (error) {
         console.error('Error fetching departments:', error.message);
@@ -138,16 +221,65 @@ const viewAllDepartmentsSQL = async () => {
 };
 
 // TODO
-const addDepartmentSQL = async () => {
-	console.error('TODO');
+const addDepartmentSQL = async (
+    departmentName: string,
+): Promise<void> => {
+    const query = `
+        INSERT INTO department (name) VALUES ($1)
+    `;
+
+    const params = [departmentName];
+
+    try {
+        await pool.query(query, params);
+
+        if (DEBUG) {
+            console.log(`addDepartmentSQL: Added "${departmentName}" to the database.\n${query}`);
+        }
+        
+    } catch (error) {
+        console.error('Error adding department:', error.message);
+        throw error;
+    }
 };
+
+
+/*
+ * Get the list of unique manager entries
+*/
+const getAllManagers = async () => {
+    const query = `
+        SELECT DISTINCT
+            CONCAT(manager.first_name, ' ', manager.last_name) AS manager
+        FROM
+            employee
+        LEFT JOIN 
+            employee AS manager ON employee.manager_id = manager.id
+            where employee.manager_id is not null
+        ORDER BY
+            manager ASC;
+    `;
+
+    try {
+        const result = await pool.query(query);
+        if (DEBUG) {
+            console.info(`getAllManagers: success\n${query}`);
+        }
+        return result.rows;
+    } catch (error) {
+        console.error('Error fetching managers:', error.message);
+        throw error;
+    }
+};
+
 
 export { 
     viewAllEmployeesSQL, 
     addEmployeeSQL, 
     updateEmployeeRoleSQL, 
-    viewAllRolesSQL, 
+    viewRolesSQL, 
     addRoleSQL, 
     viewAllDepartmentsSQL, 
-    addDepartmentSQL
+    addDepartmentSQL,
+    getAllManagers
 };
