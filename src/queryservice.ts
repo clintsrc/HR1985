@@ -62,13 +62,10 @@ const updateEmployeeRoleSQL = async () => {
  * Return the result in an array of records
  * 
  */
-const viewAllRolesSQL = async () => {
+const viewRolesSQL = async (columns = ['role.id', 'role.title', 'department.name AS department', 'role.salary']) => {
     const query = `
         SELECT
-            role.id,
-            role.title,
-            department.name AS department,
-            role.salary
+            ${columns.join(', ')}
         FROM
             role
         JOIN 
@@ -138,15 +135,29 @@ const viewAllDepartmentsSQL = async () => {
 };
 
 // TODO
-const addDepartmentSQL = async () => {
-	console.error('TODO');
+const addDepartmentSQL = async (
+    departmentName: string,
+): Promise<void> => {
+    const query = `
+        INSERT INTO department (name) VALUES ($1)
+    `;
+
+    const params = [departmentName];
+
+    try {
+        await pool.query(query, params);
+        console.log(`Added "${departmentName}" to the database.`);
+    } catch (error) {
+        console.error('Error adding department:', error.message);
+        throw error;
+    }
 };
 
 export { 
     viewAllEmployeesSQL, 
     addEmployeeSQL, 
     updateEmployeeRoleSQL, 
-    viewAllRolesSQL, 
+    viewRolesSQL, 
     addRoleSQL, 
     viewAllDepartmentsSQL, 
     addDepartmentSQL

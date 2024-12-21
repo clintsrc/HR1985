@@ -1,15 +1,15 @@
 import Table from 'cli-table3'; // a little help with the query output here
 import inquirer from "inquirer";
-import { pool } from './../connection.js';
+import { pool } from '../connection.js';
 
 import { 
-    addEmployeeSQL,
-    updateEmployeeRoleSQL,
+    addEmployeeSQL, //  todo
+    updateEmployeeRoleSQL,  //  todo
     viewAllEmployeesSQL, 
     addRoleSQL, 
     viewAllDepartmentsSQL,
     addDepartmentSQL, 
-    viewAllRolesSQL
+    viewRolesSQL
 } from '../queryservice.js';
 
 // define the Cli class
@@ -17,12 +17,7 @@ class Cli {
     exit: boolean = false;
 
     // TODO
-    /*     
-    (1) What is the name of the department? Service
-    Added Service to the database
-    */
     async addDepartment() {
-        console.log("addDepartment");
 
         const answers = await inquirer.prompt([
             {
@@ -32,9 +27,8 @@ class Cli {
             },
         ]);
 
-        // TODO
         try {
-            const roles = await addDepartmentSQL();
+            const roles = await addDepartmentSQL(answers.departmentName);
             console.log(`Added ${answers.departmentName} to the database.`);
         } catch (error) {
             console.error('Error fetching roles:', error.message);
@@ -72,17 +66,6 @@ class Cli {
     }
 
     // TODO
-    /*     
-    Add Role
-    (2) What is the name of the role? Customer Service
-    What is the salary of the role? 80000
-    Which department does the role belong to? (use arrow keys)
-        Engineering
-        Finance
-        ...
-        Service *
-    Added Customer Service to the database
-    */
     async addRole() {
         console.log("addRole");
 
@@ -113,7 +96,6 @@ class Cli {
             },
         ]);
 
-        // TODO
         try {
             const roles = await addRoleSQL(answers.roleTitle, answers.roleSalary, answers.departmentName);
             console.log(`Added ${answers.roleTitle} to the database.`);
@@ -128,7 +110,7 @@ class Cli {
     async viewAllRoles() {
     
         try {
-            const roles = await viewAllRolesSQL();
+            const roles = await viewRolesSQL();
     
             // prepare the header format
             const table = new Table({
@@ -167,18 +149,21 @@ class Cli {
     async updateEmployeeRole() {
         console.log("updateEmployeeRole");
 
+        const employees = await viewAllEmployeesSQL();
+        const roles = await viewRolesSQL();
+
         const answers = await inquirer.prompt([
             {
-                type: 'list',
-                name: 'employee',
-                message: "Which employee's role would you like to update?",
-                choices: ['John Doe', 'Mike Chan', 'Sarah Lourd'],
+            type: 'list',
+            name: 'employee',
+            message: "Which employee's role would you like to update?",
+            choices: employees.map(employee => `${employee.first_name} ${employee.last_name}`),
             },
             {
-                type: 'list',
-                name: 'newRole',
-                message: 'Which role do you want to assign to the selected employee?',
-                choices: ['Sales Lead', 'Salesperson', 'Lead Engineer'],
+            type: 'list',
+            name: 'newRole',
+            message: 'Which role do you want to assign to the selected employee?',
+            choices: roles.map(role => role.title),
             },
         ]);
 
@@ -211,6 +196,7 @@ class Cli {
     */
     async addEmployee() {
         console.log("addEmployee");
+        const roles = await viewRolesSQL();
 
         const answers = await inquirer.prompt([
             {
@@ -227,13 +213,13 @@ class Cli {
                 type: 'list',
                 name: 'role',
                 message: "What is the employee's role?",
-                choices: ['Sales Lead', 'Salesperson', 'Lead Engineer', 'Software Engineer'],
+                choices: roles.map(role => role.title),
             },
             {
                 type: 'list',
                 name: 'manager',
                 message: "Who is the employee's manager?",
-                choices: ['None', 'John Doe', 'Ashley Rodriguez'],
+                choices: ['None', 'John Doe', 'Ashley Rodriguez'],   // todo fix this
             },
         ]);
 
