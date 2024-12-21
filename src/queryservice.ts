@@ -1,7 +1,7 @@
 /*
  * queryservice
  *
- * This module uses the pg module connection pool to interface with a 
+ * This module uses the pg module's connection pool to interface with a 
  * PostgreSQL database and manage employee data. The necessary SQL functions 
  * are exported to a command line class where the user can select which 
  * operations to perform on the employee data

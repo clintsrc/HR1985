@@ -1,20 +1,19 @@
 /*
- * Cli
+ * CLI
  *
  * This class drives the command line prompt interaction to interface
  * with the PostgreSQL employee tracking database. It is responsible for 
- * connecting to and disconnecting from the database. When connected it
- * interacts with the user through command line prompts via the inquirer npm 
- * package. It uses the queryservice module to load options into the menu 
- * choices where necessary and also to handle the SQL transactions.
+ * managing the lifecycle of connecting to and disconnecting from the database. 
+ * When connected the CLI interacts with the user through command line prompts 
+ * via the inquirer npm package. It uses the queryservice module in order to 
+ * load dynamically changing menu choice options where needed, and makes the
+ * calls to the SQL transactions.
  * 
  */
 
 import Table from 'cli-table3'; // a little help with the console table output here
 import inquirer from "inquirer";
 import { connectToDb, disconnectFromDb } from '../connection.js';
-
-await connectToDb();
 
 import { 
     addEmployeeSQL,
@@ -31,6 +30,49 @@ import {
 class Cli {
     exit: boolean = false;
 
+    constructor() {
+        // connect to the database first
+        this.startDbConnection();
+    }
+
+    /*
+     *
+     * The CLI is s responsible for requesting the database connection
+     * before any SQL requests can be made
+     * 
+     */
+    async startDbConnection() {
+        try {
+            await connectToDb();
+        } catch (error) {
+            console.error("Failed to connect to the database:", error.message);
+            process.exit(1); // Exit immediately if the connection fails
+        }
+    }
+
+    /*
+     *
+     * The CLI is responsible for requesting the database disconnect when
+     * the user is finished
+     * 
+     */
+    async disconnectDb() {
+        try {
+            await disconnectFromDb();
+            console.log("Have a nice day 🙂");
+        } catch (error) {
+            console.error("Error disconnecting from the database:", error.message);
+        }
+    }
+
+    // Make sure to close the connection cleanly when user selects Quit
+    async quitApp() {
+        // disconnect from the database
+        await this.disconnectDb();
+        // exit the application itself
+        process.exit(0);
+    }
+    
     // TODO
     async addDepartment() {
         const answers = await inquirer.prompt([
@@ -298,8 +340,7 @@ class Cli {
             await this.addDepartment();
         } else if (answers.MainMenu === 'Quit') {
             // Exit the app when the user selects Quit
-            disconnectFromDb();
-            process.exit(0);  // This ensures the app terminates after disconnecting
+            await this.quitApp();
         }
     }
 }

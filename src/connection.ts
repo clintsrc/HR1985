@@ -1,10 +1,10 @@
 /*
  * connection
  *
- * This module handles connecting to the PostgreSQL database using credentials
- * that you supply in an .env file (see the README.md or index.js for details). 
- * Once connected, the pg module provides a pool of connections for the 
- * application to start using the database efficiently
+ * This module handles the connection to the PostgreSQL database. It uses
+ * credentials that you supply in an .env file (see the README.md or index.js 
+ * for details). Once connected, the pg module provides a pool of connections 
+ * for the application to use efficiently
  * 
  */
 
@@ -26,8 +26,8 @@ const pool = new Pool({
 
 const connectToDb = async () => {
   try {
+    console.log('Connecting to the database.');
     await pool.connect();
-    console.log('Connected to the database.');
   } catch (err) {
     console.error('Error connecting to database:', err);
     process.exit(1);
@@ -38,7 +38,6 @@ const disconnectFromDb = async () => {
   try {
     pool.end();
     console.log('Disconnected from the database.');
-    console.log("Have a nice day 🙂");
   } catch (err) {
     console.error('Error disconnecting from database:', err);
   }
