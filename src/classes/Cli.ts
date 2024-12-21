@@ -9,7 +9,8 @@ import {
     addRoleSQL, 
     viewAllDepartmentsSQL,
     addDepartmentSQL, 
-    viewRolesSQL
+    viewRolesSQL,
+    getAllManagers
 } from '../queryservice.js';
 
 // define the Cli class
@@ -196,7 +197,9 @@ class Cli {
     */
     async addEmployee() {
         console.log("addEmployee");
+
         const roles = await viewRolesSQL();
+        const managers = await getAllManagers();
 
         const answers = await inquirer.prompt([
             {
@@ -219,7 +222,8 @@ class Cli {
                 type: 'list',
                 name: 'manager',
                 message: "Who is the employee's manager?",
-                choices: ['None', 'John Doe', 'Ashley Rodriguez'],   // todo fix this
+                // the spec supports no manager, so None is called out first
+                choices: ['None', ...managers.map(manager => `${manager.manager}`)],
             },
         ]);
 

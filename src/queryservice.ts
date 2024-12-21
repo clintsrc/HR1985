@@ -153,6 +153,33 @@ const addDepartmentSQL = async (
     }
 };
 
+
+/*
+ * Get the list of unique manager entries
+*/
+const getAllManagers = async () => {
+    const query = `
+        SELECT DISTINCT
+            CONCAT(manager.first_name, ' ', manager.last_name) AS manager
+        FROM
+            employee
+        LEFT JOIN 
+            employee AS manager ON employee.manager_id = manager.id
+            where employee.manager_id is not null
+        ORDER BY
+            manager ASC;
+    `;
+
+    try {
+        const result = await pool.query(query);
+        return result.rows;
+    } catch (error) {
+        console.error('Error fetching managers:', error.message);
+        throw error;
+    }
+};
+
+
 export { 
     viewAllEmployeesSQL, 
     addEmployeeSQL, 
@@ -160,5 +187,6 @@ export {
     viewRolesSQL, 
     addRoleSQL, 
     viewAllDepartmentsSQL, 
-    addDepartmentSQL
+    addDepartmentSQL,
+    getAllManagers
 };
