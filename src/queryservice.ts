@@ -381,17 +381,147 @@ const getAllManagers = async () => {
     }
 };
 
+/*
+// TODO
+// The query is a 1-to-many, it aggregates the employees for each manager.
+// It uses a self-join (LEFT JOIN) to get the manager's name by looking up 
+// the manager in the same employee table.
+
+// It returns 2 fields:
+//  mangagers: the concatenated manager's first and last name
+//  employees: a sorted array with each employee's concatenated first and 
+//      last name
+*/
+const viewEmployeesByManagerSQL = async () => {
+    const query = `
+        SELECT
+            CONCAT(manager.first_name, ' ', manager.last_name) AS managers,
+            ARRAY_AGG(
+                CONCAT(employee.first_name, ' ', employee.last_name)
+                ORDER BY employee.first_name, employee.last_name
+            ) AS employees
+        FROM
+            employee
+        LEFT JOIN employee AS manager
+            ON employee.manager_id = manager.id
+        JOIN role
+            ON employee.role_id = role.id
+        GROUP BY
+            manager.first_name, manager.last_name
+        ORDER BY
+            manager.first_name, manager.last_name;
+    `;
+
+    try {
+        const result = await pool.query(query);
+        
+        if (DEBUG) {
+            console.info(`viewEmployeesByManagerSQL: success\n${query}`);
+        }
+
+        return result.rows;
+    } catch (error) {
+        console.error('Error fetching employees by manager:', error.message);
+        throw error;
+    }
+};
+
+/*
+// TODO
+// viewDepartmentByBudgetSQL()
+// This function provides a view oof the total utilized budget of a department
+// (i.e. the combined salaries of all employees in that department).
+// The query uses the SUM function, along with the GROUP BY clause, to 
+// calculate the total salary budget for each department according to the roles 
+// assigned to employees in each department.
+// The GROUP BY clause is what group the departments.
+// The query returns:
+//  department_name
+//  total_budget
+ */
+const viewDepartmentByBudgetSQL = async () => {
+    const query = `
+        SELECT
+            department.name AS department_name,
+            SUM(role.salary) AS total_budget
+        FROM
+            department
+        JOIN role ON department.id = role.department_id
+        JOIN employee ON role.id = employee.role_id
+        GROUP BY
+            department.name
+        ORDER BY
+            department.name;
+    `;
+
+    try {
+        const result = await pool.query(query);
+        
+        if (DEBUG) {
+            console.info(`viewDepartmentByBudgetSQL: success\n${query}`);
+        }
+
+        return result.rows;
+    } catch (error) {
+        console.error('Error fetching department by budget:', error.message);
+        throw error;
+    }
+};
+
+/*
+// TODO
+// The query is a 1-to-many. It aggregates the employees for each department.
+
+// It returns 2 fields:
+//  department_name
+//  employees: a sorted array with each employee's concatenated first and 
+//      last name
+*/
+const viewEmployeesByDepartmentSQL = async () => {
+    const query = `
+        SELECT
+            department.name AS department_name,
+            ARRAY_AGG(
+                CONCAT(employee.first_name, ' ', employee.last_name)
+                ORDER BY employee.first_name, employee.last_name
+            ) AS employees
+        FROM
+            department
+        JOIN role ON department.id = role.department_id
+        JOIN employee ON role.id = employee.role_id
+        GROUP BY
+            department.name
+        ORDER BY
+            department.name;
+    `;
+
+    try {
+        const result = await pool.query(query);
+        
+        if (DEBUG) {
+            console.info(`viewEmployeesByDepartmentSQL: success\n${query}`);
+        }
+
+        return result.rows;
+    } catch (error) {
+        console.error('Error fetching employees by department:', error.message);
+        throw error;
+    }
+};
 
 export { 
-    viewAllEmployeesSQL, 
-    addEmployeeSQL, 
-    deleteEmployeeSQL,
-    updateEmployeeRoleSQL, 
-    viewRolesSQL, 
-    addRoleSQL, 
-    deleteRoleSQL, 
     viewAllDepartmentsSQL, 
+    viewRolesSQL, 
+    viewAllEmployeesSQL, 
+    viewEmployeesByManagerSQL, 
+    viewEmployeesByDepartmentSQL, 
+    viewDepartmentByBudgetSQL, 
+    getAllManagers, 
+    addDepartmentSQL, 
+    addRoleSQL, 
+    addEmployeeSQL, 
+    updateEmployeeRoleSQL, 
     deleteDepartmentSQL, 
-    addDepartmentSQL,
-    getAllManagers
+    deleteRoleSQL, 
+    deleteEmployeeSQL
 };

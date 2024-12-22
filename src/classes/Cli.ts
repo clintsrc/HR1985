@@ -16,17 +16,20 @@ import inquirer from "inquirer";
 import { connectToDb, disconnectFromDb } from '../connection.js';
 
 import { 
-    addEmployeeSQL,
-    deleteEmployeeSQL, // bonus
-    updateEmployeeRoleSQL,
+    viewAllDepartmentsSQL, 
+    viewRolesSQL, 
     viewAllEmployeesSQL, 
-    addRoleSQL, 
-    deleteRoleSQL, // bonus
-    viewAllDepartmentsSQL,
+    viewDepartmentByBudgetSQL, //bonus
+    viewEmployeesByManagerSQL, // bonus
+    viewEmployeesByDepartmentSQL, //bonus
+    getAllManagers, 
     addDepartmentSQL, 
+    addRoleSQL, 
+    addEmployeeSQL, 
+    updateEmployeeRoleSQL, 
     deleteDepartmentSQL, //bonus
-    viewRolesSQL,
-    getAllManagers
+    deleteRoleSQL, // bonus
+    deleteEmployeeSQL // bonus
 } from '../queryservice.js';
 
 // define the Cli class
@@ -400,6 +403,100 @@ class Cli {
         this.startCli();
     }
 
+   // TODO
+   async viewDepartmentByBudget() {
+
+        try {
+            const departments = await viewDepartmentByBudgetSQL();
+        
+            // prepare the header format
+            const table = new Table({
+                head: ['Department', 'Budget'],
+                colWidths: [30, 9],
+            });
+        
+            // update the table with each dapartment record that was returned
+            departments.forEach(department => {
+                table.push([department.department_name, department.total_budget]);
+            });
+        
+            // show the table
+            console.log(table.toString());
+        
+        } catch (error) {
+            console.error('Error retrieving employees:', error.message);
+        }
+
+        // return to the main menu
+        this.startCli();
+    }
+
+    // TODO
+    async viewEmployeesByManager() {
+
+        try {
+            const employees = await viewEmployeesByManagerSQL();
+        
+            // prepare the header format
+            const table = new Table({
+                head: ['Manager', 'Employees'],
+                colWidths: [30, 50],
+                wordWrap: true // dynamically resizes the employees column to handle the array
+            });
+        
+            /*
+             * Update the table with each record that was returned.
+             * The join, creates a single string of comma-separated employees 
+             * to make the record more readable
+             */
+            employees.forEach(manager => {
+                table.push([manager.manager, manager.employees.join(', ')]);
+            });
+        
+            // show the table
+            console.log(table.toString());
+        
+        } catch (error) {
+            console.error('Error retrieving employees:', error.message);
+        }
+
+        // return to the main menu
+        this.startCli();
+    }
+
+    // TODO
+    async viewEmployeesByDepartment() {
+
+        try {
+            const employees = await viewEmployeesByDepartmentSQL();
+            console.log(employees)
+            // prepare the header format
+            const table = new Table({
+                head: ['Department', 'Employees'],
+                colWidths: [30, 50],
+                wordWrap: true // dynamically resizes the employees column to handle the array
+            });
+        
+            /*
+             * Update the table with each record that was returned.
+             * The join, creates a single string of comma-separated employees 
+             * to make the record more readable
+             */
+            employees.forEach(department => {
+                table.push([department.department_name, department.employees.join(', ')]);
+            });
+        
+            // show the table
+            console.log(table.toString());
+        
+        } catch (error) {
+            console.error('Error retrieving employees:', error.message);
+        }
+
+        // return to the main menu
+        this.startCli();
+    }
+
     // TODO
     async startCli(): Promise<void> {
         const answers = await inquirer.prompt([
@@ -408,48 +505,75 @@ class Cli {
                 name: 'MainMenu',
                 message: 'What would you like to do?',
                 choices: [
-                    'View All Employees',
-                    'Add Employee',
-                    'Delete Employee',
-                    'Update Employee Role',
-                    'View All Roles',
-                    'Add Role',
-                    'Delete Role',
-                    'View All Departments',
-                    'Add Department',
-                    'Delete Department',
-                    'Quit',
+                    'View All Departments', 
+                    'View All Roles', 
+                    'View All Employees', 
+                    'View Department by Budget',
+                    'View All Employees by Manager', 
+                    'View All Employees by Department', 
+                    'Add Department', 
+                    'Add Role', 
+                    'Update Employee Role', 
+                    'Add Employee', 
+                    'Delete Department', 
+                    'Delete Role', 
+                    'Delete Employee', 
+                    'Quit', 
                 ],
             },
         ]);
 
-        // Handle the main menu answers
-        if (answers.MainMenu === 'View All Employees') {
-            await this.viewAllEmployees();
-        } else if (answers.MainMenu === 'Add Employee') {
-            await this.addEmployee();
-        } else if (answers.MainMenu === 'Delete Employee') {
-            await this.deleteEmployee();
-        } else if (answers.MainMenu === 'Update Employee Role') {
-            await this.updateEmployeeRole();
-        } else if (answers.MainMenu === 'View All Roles') {
-            await this.viewAllRoles();
-        } else if (answers.MainMenu === 'Add Role') {
-            await this.addRole();
-        } else if (answers.MainMenu === 'Delete Role') {
-            await this.deleteRole();
-        } else if (answers.MainMenu === 'View All Departments') {
-            await this.viewAllDepartments();            
-        } else if (answers.MainMenu === 'Add Department') {
-            await this.addDepartment();
-        } else if (answers.MainMenu === 'Delete Department') {
-            await this.deleteDepartment();
-        } else if (answers.MainMenu === 'Quit') {
-            // Exit the app when the user selects Quit
-            await this.quitApp();
-        }
-    }
-}
+        // Main menu
+        switch (answers.MainMenu) {
+            case 'View All Departments':
+                await this.viewAllDepartments();
+                break;
+            case 'View All Roles':
+                await this.viewAllRoles();
+                break;
+            case 'View All Employees':
+                await this.viewAllEmployees();
+                break;
+            case 'View Department by Budget':
+                await this.viewDepartmentByBudget();
+                break;
+            case 'View All Employees by Manager':
+                await this.viewEmployeesByManager();
+                break;
+            case 'View All Employees by Department':
+                await this.viewEmployeesByDepartment();
+                break;
+            case 'Add Department':
+                await this.addDepartment();
+                break;
+            case 'Add Role':
+                await this.addRole();
+                break;
+            case 'Add Employee':
+                await this.addEmployee();
+                break;
+            case 'Update Employee Role':
+                await this.updateEmployeeRole();
+                break;
+            case 'Delete Department':
+                await this.deleteDepartment();
+                break;
+            case 'Delete Role':
+                await this.deleteRole();
+                break;
+            case 'Delete Employee':
+                await this.deleteEmployee();
+                break;
+            case 'Quit':
+                await this.quitApp();
+                break;
+            default:
+                console.log('Invalid selection.');
+                this.startCli();
+                break;
+        }   // end switch
+    }   // end startCli()
+}   // end Cli class
 
 // export the Cli class
 export default Cli;
