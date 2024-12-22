@@ -101,6 +101,29 @@ const addEmployeeSQL = async (
 
 
 // TODO
+const deleteEmployeeSQL = async (
+    employeeNameFirstName: string,
+    employeeNameLastName: string
+): Promise<void> => {
+    const query = `
+        DELETE FROM employee
+        WHERE first_name = $1 AND last_name = $2;
+    `;
+    const params = [employeeNameFirstName, employeeNameLastName];
+
+    try {
+        await pool.query(query, params);
+
+        if (DEBUG) {
+            console.log(`deleteEmployeeSQL: Employee successfully deleted: ${employeeNameFirstName} ${employeeNameLastName}.\n${query}`);
+        }
+    } catch (error) {
+        console.error('Error deleting employee:', error.message);
+        throw error;
+    }
+};
+
+// TODO
 const updateEmployeeRoleSQL = async (
     newRole: string,
     employeeName: string
@@ -185,6 +208,45 @@ const addRoleSQL = async (
         throw error;
     }
 };
+
+
+// TODO
+const deleteRoleSQL = async (
+    roleTitle: string,
+): Promise<boolean> => {
+    try {
+        // Is the role assigned to an employee
+        const result = await pool.query(
+            `SELECT COUNT(*) AS count 
+            FROM employee 
+            WHERE role_id = (
+                SELECT id FROM role WHERE title = $1
+            )`, [roleTitle]
+        );
+
+        if (result.rows[0].count > 0) {
+            console.log(`Role "${roleTitle}" is assigned to an active employee and cannot be deleted.`);
+            return false;
+        }
+
+        // Proceed with deletion if not assigned
+        await pool.query(`
+            DELETE FROM role 
+            WHERE title = $1`, [roleTitle]);
+        
+        if (DEBUG) {
+            console.log(`deleteRoleSQL: Role "${roleTitle}" deleted successfully.\n`);
+        }
+
+        // Return true if the role was successfully deleted
+        return true;
+    } catch (error) {
+        console.error('Error deleting role:', error.message);
+        throw error;
+    }
+}
+
+
 
 
 /*
@@ -276,9 +338,11 @@ const getAllManagers = async () => {
 export { 
     viewAllEmployeesSQL, 
     addEmployeeSQL, 
+    deleteEmployeeSQL,
     updateEmployeeRoleSQL, 
     viewRolesSQL, 
     addRoleSQL, 
+    deleteRoleSQL, 
     viewAllDepartmentsSQL, 
     addDepartmentSQL,
     getAllManagers

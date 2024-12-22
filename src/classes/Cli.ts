@@ -17,9 +17,11 @@ import { connectToDb, disconnectFromDb } from '../connection.js';
 
 import { 
     addEmployeeSQL,
+    deleteEmployeeSQL, // bonus
     updateEmployeeRoleSQL,
     viewAllEmployeesSQL, 
     addRoleSQL, 
+    deleteRoleSQL, // bonus
     viewAllDepartmentsSQL,
     addDepartmentSQL, 
     viewRolesSQL,
@@ -87,9 +89,10 @@ class Cli {
             const roles = await addDepartmentSQL(answers.departmentName);
             console.log(`Added ${answers.departmentName} to the database.`);
         } catch (error) {
-            console.error('Error fetching roles:', error.message);
+            console.error('Error adding department:', error.message);
         }
         
+        // return to the main menu
         this.startCli();
     }
     
@@ -114,7 +117,7 @@ class Cli {
             console.log(table.toString());
     
         } catch (error) {
-            console.error('Error fetching departments:', error.message);
+            console.error('Error retrieving departments:', error.message);
         }
 
         // return to the main menu
@@ -155,11 +158,44 @@ class Cli {
             const roles = await addRoleSQL(answers.roleTitle, answers.roleSalary, answers.departmentName);
             console.log(`Added ${answers.roleTitle} to the database.`);
         } catch (error) {
-            console.error('Error fetching roles:', error.message);
+            console.error('Error adding role:', error.message);
         }
 
+        // return to the main menu
         this.startCli();
     }
+
+
+    // TODO
+    async deleteRole() {
+        // Get data to populate the prompt info
+        const roles = await viewRolesSQL();
+    
+        const answers = await inquirer.prompt([
+            {
+                type: 'list',
+                name: 'roleTitle',
+                message: "Which role would you like to delete?",
+                choices: roles.map(role => role.title),
+            },
+        ]);
+    
+        try {
+            const result = await deleteRoleSQL(answers.roleTitle);
+    
+            if (result) {
+                console.log(`Deleted role "${answers.roleTitle}" from the database.`);
+            } else {
+                console.error(`Error deleting role "${answers.roleTitle}".`);
+            }
+        } catch (error) {
+            console.error('Unexpected error while deleting role:', error.message);
+        }
+    
+        // return to the main menu
+        this.startCli();
+    }    
+    
 
     // TODO
     async viewAllRoles() {
@@ -181,7 +217,7 @@ class Cli {
             // show the table
             console.log(table.toString()); // Render the table to the console
         } catch (error) {
-            console.error('Error fetching roles:', error.message);
+            console.error('Error retrieving roles:', error.message);
         }
     
         // return to the main menu
@@ -213,7 +249,7 @@ class Cli {
             await updateEmployeeRoleSQL(answers.newRole, answers.employee);
             console.log(`Updated ${answers.employee}'s role to ${answers.newRole}.`);
         } catch (error) {
-            console.error('Error fetching roles:', error.message);
+            console.error('Error updating role:', error.message);
         }
 
         // return to the main menu
@@ -268,6 +304,36 @@ class Cli {
         this.startCli();
     }
     
+    // TODO
+    async deleteEmployee() {
+        // Get data to populate the prompt info
+        const employees = await viewAllEmployeesSQL();
+    
+        // Prompt user for input
+        const answers = await inquirer.prompt([
+            {
+                type: 'list',
+                name: 'employeeName',
+                message: "Which employee would you like to delete?",
+                choices: employees.map(employee => `${employee.first_name} ${employee.last_name}`),
+            },
+        ]);
+    
+        try {
+            const [employeeFirstName, employeeLastName] = answers.employeeName.split(' ');
+            await deleteEmployeeSQL(
+                employeeFirstName, 
+                employeeLastName
+            );
+            console.log(`Deleted ${employeeFirstName} ${employeeLastName} from the database.`);
+        } catch (error) {
+            console.error('Error deleting employee:', error.message);
+        }
+    
+        // return to the main menu
+        this.startCli();
+    }
+
 
     // TODO
     async viewAllEmployees() {
@@ -296,7 +362,7 @@ class Cli {
             console.log(table.toString());
         
         } catch (error) {
-            console.error('Error fetching employees:', error.message);
+            console.error('Error retrieving employees:', error.message);
         }
 
         // return to the main menu
@@ -313,9 +379,11 @@ class Cli {
                 choices: [
                     'View All Employees',
                     'Add Employee',
+                    'Delete Employee',
                     'Update Employee Role',
                     'View All Roles',
                     'Add Role',
+                    'Delete Role',
                     'View All Departments',
                     'Add Department',
                     'Quit',
@@ -328,12 +396,16 @@ class Cli {
             await this.viewAllEmployees();
         } else if (answers.MainMenu === 'Add Employee') {
             await this.addEmployee();
+        } else if (answers.MainMenu === 'Delete Employee') {
+            await this.deleteEmployee();
         } else if (answers.MainMenu === 'Update Employee Role') {
             await this.updateEmployeeRole();
         } else if (answers.MainMenu === 'View All Roles') {
             await this.viewAllRoles();
         } else if (answers.MainMenu === 'Add Role') {
             await this.addRole();
+        } else if (answers.MainMenu === 'Delete Role') {
+            await this.deleteRole();
         } else if (answers.MainMenu === 'View All Departments') {
             await this.viewAllDepartments();            
         } else if (answers.MainMenu === 'Add Department') {

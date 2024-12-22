@@ -4,9 +4,10 @@
  */
 
 -- Update employee managers.
--- TODO
+-- TODO: updateEmployeeManagers
 
 -- View employees by manager.
+-- TODO: viewEmployeesByManager
 /* 
 SELECT
     manager.first_name AS manager_first_name,
@@ -27,6 +28,7 @@ ORDER BY
 
 
 -- View employees by department.
+-- TODO viewEmployeesByDepartment
 /*
 SELECT
     department.name AS department_name,
@@ -48,6 +50,7 @@ ORDER BY
 -- TODO
 
 -- View the total utilized budget of a department—in other words, the combined salaries of all employees in that department.
+-- TODO viewDepartmentBudget
 /* 
 SELECT
     department.name AS department_name,
