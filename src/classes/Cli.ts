@@ -24,6 +24,7 @@ import {
     deleteRoleSQL, // bonus
     viewAllDepartmentsSQL,
     addDepartmentSQL, 
+    deleteDepartmentSQL, //bonus
     viewRolesSQL,
     getAllManagers
 } from '../queryservice.js';
@@ -196,6 +197,36 @@ class Cli {
         this.startCli();
     }    
     
+
+    // TODO
+    async deleteDepartment() {
+        // Get data to populate the prompt info
+        const departments = await viewAllDepartmentsSQL();
+   
+        const answers = await inquirer.prompt([
+            {
+                type: 'list',
+                name: 'departmentName',
+                message: "Which department would you like to delete?",
+                choices: departments.map(department => department.department),
+            },
+        ]);
+    
+        try {
+            const result = await deleteDepartmentSQL(answers.departmentName);
+    
+            if (result) {
+                console.log(`Deleted department "${answers.departmentName}" from the database.`);
+            } else {
+                console.error(`Error deleting department "${answers.departmentName}".`);
+            }
+        } catch (error) {
+            console.error('Unexpected error while deleting department:', error.message);
+        }
+    
+        // return to the main menu
+        this.startCli();
+    }
 
     // TODO
     async viewAllRoles() {
@@ -386,6 +417,7 @@ class Cli {
                     'Delete Role',
                     'View All Departments',
                     'Add Department',
+                    'Delete Department',
                     'Quit',
                 ],
             },
@@ -410,6 +442,8 @@ class Cli {
             await this.viewAllDepartments();            
         } else if (answers.MainMenu === 'Add Department') {
             await this.addDepartment();
+        } else if (answers.MainMenu === 'Delete Department') {
+            await this.deleteDepartment();
         } else if (answers.MainMenu === 'Quit') {
             // Exit the app when the user selects Quit
             await this.quitApp();

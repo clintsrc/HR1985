@@ -211,9 +211,15 @@ const addRoleSQL = async (
 
 
 // TODO
+// Delete the role only if there are no employees assigned to it:
+//    we don't want to make assumptions about what dependent data to
+//    destroy in the chain
+//
 const deleteRoleSQL = async (
     roleTitle: string,
 ): Promise<boolean> => {
+    let bDeleteSuccess: boolean = false;
+
     try {
         // Is the role assigned to an employee
         const result = await pool.query(
@@ -224,29 +230,70 @@ const deleteRoleSQL = async (
             )`, [roleTitle]
         );
 
-        if (result.rows[0].count > 0) {
-            console.log(`Role "${roleTitle}" is assigned to an active employee and cannot be deleted.`);
-            return false;
-        }
+        if (result.rows[0].count == 0) { // not in use, safe to delete
+            await pool.query(`
+                DELETE FROM role 
+                WHERE title = $1`, [roleTitle]);
+            
+            if (DEBUG) {
+                console.log(`deleteRoleSQL: Role "${roleTitle}" deleted successfully.\n`);
+            }
 
-        // Proceed with deletion if not assigned
-        await pool.query(`
-            DELETE FROM role 
-            WHERE title = $1`, [roleTitle]);
-        
-        if (DEBUG) {
-            console.log(`deleteRoleSQL: Role "${roleTitle}" deleted successfully.\n`);
-        }
+            bDeleteSuccess =  true;
+        } else {    // don't delete when the record is in use, inform the user
+            console.log(`Role "${roleTitle}" cannot be deleted while there are employees assigned to it.`);
 
-        // Return true if the role was successfully deleted
-        return true;
+            bDeleteSuccess = false;
+        }
     } catch (error) {
         console.error('Error deleting role:', error.message);
         throw error;
     }
+
+    return bDeleteSuccess;
 }
 
 
+// TODO
+// Delete the department only if there are no roles assigned to it:
+//    we don't want to make assumptions about what dependent data to
+//    destroy in the chain
+//
+const deleteDepartmentSQL = async (
+    departmentName: string
+): Promise<boolean> => {
+    let  bDeleteSuccess: boolean = false;
+
+    try {
+        // are any roles assigned to the department?
+        const result = await pool.query(
+            `SELECT COUNT(*) AS count
+             FROM role
+             WHERE department_id = (
+                 SELECT id FROM department WHERE name = $1
+             )`, [departmentName]
+        );
+
+        if (result.rows[0].count == 0) {    // not in use, safe to delete
+            await pool.query(`
+                DELETE FROM department
+                WHERE name = $1`, [departmentName]);
+
+            console.log(`deleteDepartmentSQL: Department "${departmentName}" deleted successfully.`);
+
+            bDeleteSuccess = true;
+        } else {    // don't delete when the record is in use, inform the user
+            console.log(`Department "${departmentName}" cannot be deleted while a role is assigned to it.`);
+            
+            bDeleteSuccess = false;
+        }
+    } catch (error) {
+        console.error('Error deleting department:', error.message);
+        throw error;
+    }
+
+    return bDeleteSuccess;
+};
 
 
 /*
@@ -344,6 +391,7 @@ export {
     addRoleSQL, 
     deleteRoleSQL, 
     viewAllDepartmentsSQL, 
+    deleteDepartmentSQL, 
     addDepartmentSQL,
     getAllManagers
 };
