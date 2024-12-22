@@ -45,6 +45,8 @@ function capitalize(name: string): string {
     }
     return name.charAt(0).toUpperCase() + name.slice(1);
 }
+
+
 /*
 * isValidUrl()
 *
@@ -63,8 +65,33 @@ const isValidUrl = (urlString: string): boolean => {
     }
 };
 
+
+/*
+ * validateInput()
+ *
+ * Helper function for empty values and incorrect types
+ * currently handles only strings and numbers
+ *
+ */
+function validateInput(input: string | number, isNumber: boolean = false): boolean | string {
+    if (isNumber) {
+        // Validate as a number
+        if (isNaN(Number(input))) {
+            return 'Please enter a valid number';
+        }
+    } else {
+        // Validate as a string
+        if (typeof input === 'string' && input.trim() === '') {
+            return 'Input is required';
+        }
+    }
+
+    return true;
+}
+
 export { 
     toTitleCase,
     capitalize,
     isValidUrl,
+    validateInput
 };

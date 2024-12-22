@@ -14,7 +14,7 @@
 import Table from 'cli-table3'; // a little help with the console table output here
 import inquirer from "inquirer";
 import { connectToDb, disconnectFromDb } from '../connection.js';
-import { toTitleCase, capitalize } from '../helperlib.js';
+import { toTitleCase, capitalize, validateInput } from '../helperlib.js';
 
 import { 
     viewAllDepartmentsSQL, 
@@ -28,6 +28,7 @@ import {
     addRoleSQL, 
     addEmployeeSQL, 
     updateEmployeeRoleSQL, 
+    updateEmployeeManagerSQL, // bonus
     deleteDepartmentSQL, //bonus
     deleteRoleSQL, // bonus
     deleteEmployeeSQL // bonus
@@ -87,7 +88,8 @@ class Cli {
                 type: 'input',
                 name: 'departmentName',
                 message: 'What is the name of the department?',
-            },
+                validate: input => validateInput(input),
+            }
         ]);
 
         let departmentName: string = toTitleCase(answers.departmentName);
@@ -138,26 +140,22 @@ class Cli {
 
         const answers = await inquirer.prompt([
             {
-            type: 'input',
-            name: 'roleTitle',
-            message: 'What is the name of the role?',
+                type: 'input',
+                name: 'roleTitle',
+                message: 'What is the name of the role?',
+                validate: input => validateInput(input),
             },
             {
-            type: 'input',
-            name: 'roleSalary',
-            message: 'What is the salary of the role?',
-            validate: function (input) {
-                if (isNaN(input)) {
-                return 'Please enter a valid number.';
-                }
-                return true;
-            },
+                type: 'input',
+                name: 'roleSalary',
+                message: 'What is the salary of the role?',
+                validate: input => validateInput(input, true),
             },
             {
-            type: 'list',
-            name: 'departmentName',
-            message: 'Which department does the role belong to?',
-            choices: departments.map(department => department.department),
+                type: 'list',
+                name: 'departmentName',
+                message: 'Which department does the role belong to?',
+                choices: departments.map(department => department.department),
             },
         ]);
 
@@ -271,16 +269,16 @@ class Cli {
 
         const answers = await inquirer.prompt([
             {
-            type: 'list',
-            name: 'employee',
-            message: "Which employee's role would you like to update?",
-            choices: employees.map(employee => `${employee.first_name} ${employee.last_name}`),
+                type: 'list',
+                name: 'employee',
+                message: "Which employee's role would you like to update?",
+                choices: employees.map(employee => `${employee.first_name} ${employee.last_name}`),
             },
             {
-            type: 'list',
-            name: 'newRole',
-            message: 'Which role do you want to assign to the selected employee?',
-            choices: roles.map(role => role.title),
+                type: 'list',
+                name: 'newRole',
+                message: 'Which role do you want to assign to the selected employee?',
+                choices: roles.map(role => role.title),
             },
         ]);
 
@@ -289,6 +287,51 @@ class Cli {
             console.log(`Updated ${answers.employee}'s role to ${answers.newRole}.`);
         } catch (error) {
             console.error('Error updating role:', error.message);
+        }
+
+        // return to the main menu
+        this.startCli();
+    }
+
+    // TODO
+    // Intentionally not providing None/NULL choice. What's the point of
+    // updating someone's manager to not having one?
+    async updateEmployeeManager() {
+        // Get data to populate the prompt info
+        const employees = await viewAllEmployeesSQL();
+        const managers = await getAllManagers();
+
+        const answers = await inquirer.prompt([
+            {
+                type: 'list',
+                name: 'employee',
+                message: "Which employee's manager would you like to update?",
+                choices: employees.map(employee => ({
+                    name: `${employee.first_name} ${employee.last_name}`,
+                    value: { first_name: employee.first_name, last_name: employee.last_name }
+                })),
+            },
+            {
+                type: 'list',
+                name: 'newManager',
+                message: "Which manager do you want to assign to the selected employee?",
+                choices: managers.map(manager => ({
+                    name: `${manager.manager}`,
+                    value: { first_name: manager.manager.split(' ')[0], last_name: manager.manager.split(' ')[1] }
+                })),
+            },
+        ]);
+
+        try {
+            await updateEmployeeManagerSQL(
+                answers.employee.first_name, 
+                answers.employee.last_name, 
+                answers.newManager.first_name,
+                answers.newManager.last_name
+            );
+            console.log(`Updated ${answers.employee}'s manager to ${answers.newManager}.`);
+        } catch (error) {
+            console.error('Error updating employee\'s manager:', error.message);
         }
 
         // return to the main menu
@@ -307,11 +350,13 @@ class Cli {
                 type: 'input',
                 name: 'firstName',
                 message: "What is the employee's first name?",
+                validate: input => validateInput(input),
             },
             {
                 type: 'input',
                 name: 'lastName',
                 message: "What is the employee's last name?",
+                validate: input => validateInput(input),
             },
             {
                 type: 'list',
@@ -520,9 +565,10 @@ class Cli {
                     'View All Employees by Manager', 
                     'View All Employees by Department', 
                     'Add Department', 
-                    'Add Role', 
-                    'Update Employee Role', 
+                    'Add Role',  
                     'Add Employee', 
+                    'Update Employee Role', 
+                    'Update Employee Manager', 
                     'Delete Department', 
                     'Delete Role', 
                     'Delete Employee', 
@@ -562,6 +608,9 @@ class Cli {
                 break;
             case 'Update Employee Role':
                 await this.updateEmployeeRole();
+                break;
+            case 'Update Employee Manager':
+                await this.updateEmployeeManager();
                 break;
             case 'Delete Department':
                 await this.deleteDepartment();

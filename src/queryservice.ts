@@ -147,6 +147,41 @@ const updateEmployeeRoleSQL = async (
     }
 }
 
+// TODO
+const updateEmployeeManagerSQL = async (
+    employeeFirstName: string,
+    employeeLastName: string,
+    managerFirstName: string,
+    managerLastName: string
+): Promise<void> => {
+    const query = `
+        UPDATE employee
+        SET manager_id = (
+            SELECT id FROM employee 
+            WHERE first_name = $3 AND last_name = $4
+        )
+        WHERE first_name = $1 AND last_name = $2;
+    `;
+    const params = [
+        employeeFirstName,
+        employeeLastName,
+        managerFirstName,
+        managerLastName
+    ];
+
+    try {
+        const result = await pool.query(query, params);
+
+        console.log(`updateEmployeeManagerSQL: Updated manager for "${employeeFirstName} ${employeeLastName}" to "${managerFirstName} ${managerLastName}".`);
+        
+        if (DEBUG) {
+            console.log(`Records affected: ${result.rowCount}\nQuery: ${query}`);
+        }
+    } catch (error) {
+        console.error('Error updating employee manager:', error.message);
+        throw error;
+    }
+};
 
 /*
  * getAllRoles()
@@ -521,6 +556,7 @@ export {
     addRoleSQL, 
     addEmployeeSQL, 
     updateEmployeeRoleSQL, 
+    updateEmployeeManagerSQL, 
     deleteDepartmentSQL, 
     deleteRoleSQL, 
     deleteEmployeeSQL
