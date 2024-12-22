@@ -14,6 +14,7 @@
 import Table from 'cli-table3'; // a little help with the console table output here
 import inquirer from "inquirer";
 import { connectToDb, disconnectFromDb } from '../connection.js';
+import { toTitleCase, capitalize } from '../helperlib.js';
 
 import { 
     viewAllDepartmentsSQL, 
@@ -89,9 +90,11 @@ class Cli {
             },
         ]);
 
+        let departmentName: string = toTitleCase(answers.departmentName);
+
         try {
-            const roles = await addDepartmentSQL(answers.departmentName);
-            console.log(`Added ${answers.departmentName} to the database.`);
+            const roles = await addDepartmentSQL(departmentName);
+            console.log(`Added ${departmentName} to the database.`);
         } catch (error) {
             console.error('Error adding department:', error.message);
         }
@@ -158,9 +161,11 @@ class Cli {
             },
         ]);
 
+        let roleTitle: string = toTitleCase(answers.roleTitle);
+
         try {
-            const roles = await addRoleSQL(answers.roleTitle, answers.roleSalary, answers.departmentName);
-            console.log(`Added ${answers.roleTitle} to the database.`);
+            const roles = await addRoleSQL(roleTitle, answers.roleSalary, answers.departmentName);
+            console.log(`Added ${roleTitle} to the database.`);
         } catch (error) {
             console.error('Error adding role:', error.message);
         }
@@ -321,15 +326,18 @@ class Cli {
                 choices: ['None', ...managers.map(manager => `${manager.manager}`)],
             },
         ]);
-    
+        
+        let firstName: string = capitalize(answers.firstName);
+        let lastName: string = capitalize(answers.lastName);
+
         try {
             await addEmployeeSQL(
-                answers.firstName,
-                answers.lastName,
+                firstName,
+                lastName,
                 answers.role,
                 answers.manager
             );
-            console.log(`Added ${answers.firstName} ${answers.lastName} to the database.`);
+            console.log(`Added ${firstName} ${lastName} to the database.`);
         } catch (error) {
             console.error('Error adding employee:', error.message);
         }
@@ -436,7 +444,7 @@ class Cli {
 
         try {
             const employees = await viewEmployeesByManagerSQL();
-        
+            console.log(employees)
             // prepare the header format
             const table = new Table({
                 head: ['Manager', 'Employees'],
@@ -450,7 +458,7 @@ class Cli {
              * to make the record more readable
              */
             employees.forEach(manager => {
-                table.push([manager.manager, manager.employees.join(', ')]);
+                table.push([manager.managers, manager.employees.join(', ')]);
             });
         
             // show the table
