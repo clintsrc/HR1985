@@ -49,5 +49,6 @@ CREATE TABLE employee (
     ON DELETE SET NULL,
   -- manager_id references another employee who is this employee's manager
   FOREIGN KEY (manager_id) REFERENCES employee(id)
-    ON DELETE SET NULL
+    -- Prevent deletion of role if employees are assigned
+    ON DELETE RESTRICT
 );
