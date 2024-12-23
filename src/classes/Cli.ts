@@ -299,28 +299,38 @@ class Cli {
     async updateEmployeeManager() {
         // Get data to populate the prompt info
         const employees = await viewAllEmployeesSQL();
-        const managers = await getAllManagers();
+        let managers = await getAllManagers();
 
         const answers = await inquirer.prompt([
             {
-                type: 'list',
-                name: 'employee',
-                message: "Which employee's manager would you like to update?",
-                choices: employees.map(employee => ({
-                    name: `${employee.first_name} ${employee.last_name}`,
-                    value: { first_name: employee.first_name, last_name: employee.last_name }
-                })),
-            },
-            {
-                type: 'list',
-                name: 'newManager',
-                message: "Which manager do you want to assign to the selected employee?",
-                choices: managers.map(manager => ({
-                    name: `${manager.manager}`,
-                    value: { first_name: manager.manager.split(' ')[0], last_name: manager.manager.split(' ')[1] }
-                })),
+            type: 'list',
+            name: 'employee',
+            message: "Which employee's manager would you like to update?",
+            choices: employees.map(employee => ({
+                name: `${employee.first_name} ${employee.last_name}`,
+                value: { first_name: employee.first_name, last_name: employee.last_name }
+            })),
             },
         ]);
+
+        // Filter out the selected employee from the managers list
+        managers = managers.filter(manager => 
+            `${manager.manager}` !== `${answers.employee.first_name} ${answers.employee.last_name}`
+        );
+
+        const managerAnswer = await inquirer.prompt([
+            {
+            type: 'list',
+            name: 'newManager',
+            message: "Which manager do you want to assign to the selected employee?",
+            choices: managers.map(manager => ({
+                name: `${manager.manager}`,
+                value: { first_name: manager.manager.split(' ')[0], last_name: manager.manager.split(' ')[1] }
+            })),
+            },
+        ]);
+
+        answers.newManager = managerAnswer.newManager;
 
         try {
             await updateEmployeeManagerSQL(
