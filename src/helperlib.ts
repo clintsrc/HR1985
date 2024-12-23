@@ -5,24 +5,6 @@
  * the standard javascript library doesn't support
  */
 
-/*
- * toTitleCase()
- *
- * This function will convert a string to title case, for example:
- * Convert from:
- *  thE thing
- * Convert to:
- *  The Thing
- * 
- * NOTE: If the string manipulation becomes to cumbersome, you may
- *  want to consider an npm package instead, like 'lodash'
- * 
- */
-function toTitleCase(str: string): string {
-    return str.split(' ')
-              .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-              .join(' ');
-}
 
 /*
  * capitalize()
@@ -54,6 +36,10 @@ function capitalize(name: string): string {
 * validation on a URL to catch any malformed URL problems,
 * especially useful when constructing query strings
 * 
+* NOTE: If you find you need more validation checking, you may want
+*   to consider an npm package instead, like 'Validator.js'
+* 
+* 
 */
 const isValidUrl = (urlString: string): boolean => {
     try {
@@ -64,6 +50,26 @@ const isValidUrl = (urlString: string): boolean => {
         return false;
     }
 };
+
+
+/*
+ * toTitleCase()
+ *
+ * This function will convert a string to title case, for example:
+ * Convert from:
+ *  thE thing
+ * Convert to:
+ *  The Thing
+ * 
+ * NOTE: If the string manipulation becomes to cumbersome, you may
+ *  want to consider an npm package instead, like 'lodash'
+ * 
+ */
+function toTitleCase(str: string): string {
+    return str.split(' ')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+              .join(' ');
+}
 
 
 /*
@@ -90,8 +96,8 @@ function validateInput(input: string | number, isNumber: boolean = false): boole
 }
 
 export { 
-    toTitleCase,
     capitalize,
     isValidUrl,
+    toTitleCase,
     validateInput
 };

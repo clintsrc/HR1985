@@ -38,6 +38,10 @@ import {
 class Cli {
     exit: boolean = false;
 
+    /********************************************
+     * Initialization / Connection Management / Exit methods
+     ***/
+    
     constructor() {
         // connect to the database first
         this.startDbConnection();
@@ -81,30 +85,9 @@ class Cli {
         process.exit(0);
     }
     
-    // TODO
-    async addDepartment() {
-        const answers = await inquirer.prompt([
-            {
-                type: 'input',
-                name: 'departmentName',
-                message: 'What is the name of the department?',
-                validate: input => validateInput(input),
-            }
-        ]);
-
-        let departmentName: string = toTitleCase(answers.departmentName);
-
-        try {
-            const roles = await addDepartmentSQL(departmentName);
-            console.log(`Added ${departmentName} to the database.`);
-        } catch (error) {
-            console.error('Error adding department:', error.message);
-        }
-        
-        // return to the main menu
-        this.startCli();
-    }
-    
+    /********************************************
+     * View / Read methods
+     ***/
     // TODO
     async viewAllDepartments() {
 
@@ -129,107 +112,6 @@ class Cli {
             console.error('Error retrieving departments:', error.message);
         }
 
-        // return to the main menu
-        this.startCli();
-    }
-
-    // TODO
-    async addRole() {
-        // Get data to populate the prompt info
-        const departments = await viewAllDepartmentsSQL();
-
-        const answers = await inquirer.prompt([
-            {
-                type: 'input',
-                name: 'roleTitle',
-                message: 'What is the name of the role?',
-                validate: input => validateInput(input),
-            },
-            {
-                type: 'input',
-                name: 'roleSalary',
-                message: 'What is the salary of the role?',
-                validate: input => validateInput(input, true),
-            },
-            {
-                type: 'list',
-                name: 'departmentName',
-                message: 'Which department does the role belong to?',
-                choices: departments.map(department => department.department),
-            },
-        ]);
-
-        let roleTitle: string = toTitleCase(answers.roleTitle);
-
-        try {
-            const roles = await addRoleSQL(roleTitle, answers.roleSalary, answers.departmentName);
-            console.log(`Added ${roleTitle} to the database.`);
-        } catch (error) {
-            console.error('Error adding role:', error.message);
-        }
-
-        // return to the main menu
-        this.startCli();
-    }
-
-
-    // TODO
-    async deleteRole() {
-        // Get data to populate the prompt info
-        const roles = await viewRolesSQL();
-    
-        const answers = await inquirer.prompt([
-            {
-                type: 'list',
-                name: 'roleTitle',
-                message: "Which role would you like to delete?",
-                choices: roles.map(role => role.title),
-            },
-        ]);
-    
-        try {
-            const result = await deleteRoleSQL(answers.roleTitle);
-    
-            if (result) {
-                console.log(`Deleted role "${answers.roleTitle}" from the database.`);
-            } else {
-                console.error(`Error deleting role "${answers.roleTitle}".`);
-            }
-        } catch (error) {
-            console.error('Unexpected error while deleting role:', error.message);
-        }
-    
-        // return to the main menu
-        this.startCli();
-    }    
-    
-
-    // TODO
-    async deleteDepartment() {
-        // Get data to populate the prompt info
-        const departments = await viewAllDepartmentsSQL();
-   
-        const answers = await inquirer.prompt([
-            {
-                type: 'list',
-                name: 'departmentName',
-                message: "Which department would you like to delete?",
-                choices: departments.map(department => department.department),
-            },
-        ]);
-    
-        try {
-            const result = await deleteDepartmentSQL(answers.departmentName);
-    
-            if (result) {
-                console.log(`Deleted department "${answers.departmentName}" from the database.`);
-            } else {
-                console.error(`Error deleting department "${answers.departmentName}".`);
-            }
-        } catch (error) {
-            console.error('Unexpected error while deleting department:', error.message);
-        }
-    
         // return to the main menu
         this.startCli();
     }
@@ -262,6 +144,258 @@ class Cli {
     }
 
     // TODO
+    async viewAllEmployees() {
+
+        try {
+            const employees = await viewAllEmployeesSQL();
+        
+            // prepare the header format
+            const table = new Table({
+                head: ['ID', 'First Name', 'Last Name', 'Title', 'Department', 'Salary', 'Manager'],
+                colWidths: [10, 15, 15, 20, 20, 10, 30],
+            });
+        
+            // update the table with each employee record that was returned
+            employees.forEach(employee => {
+                table.push([employee.id, 
+                            employee.first_name, 
+                            employee.last_name, 
+                            employee.title, 
+                            employee.department, 
+                            employee.salary, 
+                            employee.manager]);
+            });
+        
+            // show the table
+            console.log(table.toString());
+        
+        } catch (error) {
+            console.error('Error retrieving employees:', error.message);
+        }
+
+        // return to the main menu
+        this.startCli();
+    }
+
+   // TODO
+   async viewDepartmentByBudget() {
+
+    try {
+        const departments = await viewDepartmentByBudgetSQL();
+    
+        // prepare the header format
+        const table = new Table({
+            head: ['Department', 'Budget'],
+            colWidths: [30, 9],
+        });
+    
+        // update the table with each dapartment record that was returned
+        departments.forEach(department => {
+            table.push([department.department_name, department.total_budget]);
+        });
+    
+        // show the table
+        console.log(table.toString());
+    
+    } catch (error) {
+        console.error('Error retrieving employees:', error.message);
+    }
+
+    // return to the main menu
+    this.startCli();
+}
+
+// TODO
+async viewEmployeesByManager() {
+
+    try {
+        const employees = await viewEmployeesByManagerSQL();
+        console.log(employees)
+        // prepare the header format
+        const table = new Table({
+            head: ['Manager', 'Employees'],
+            colWidths: [30, 50],
+            wordWrap: true // dynamically resizes the employees column to handle the array
+        });
+    
+        /*
+         * Update the table with each record that was returned.
+         * The join, creates a single string of comma-separated employees 
+         * to make the record more readable
+         */
+        employees.forEach(manager => {
+            table.push([manager.managers, manager.employees.join(', ')]);
+        });
+    
+        // show the table
+        console.log(table.toString());
+    
+    } catch (error) {
+        console.error('Error retrieving employees:', error.message);
+    }
+
+    // return to the main menu
+    this.startCli();
+}
+
+// TODO
+async viewEmployeesByDepartment() {
+
+    try {
+        const employees = await viewEmployeesByDepartmentSQL();
+        console.log(employees)
+        // prepare the header format
+        const table = new Table({
+            head: ['Department', 'Employees'],
+            colWidths: [30, 50],
+            wordWrap: true // dynamically resizes the employees column to handle the array
+        });
+    
+        /*
+         * Update the table with each record that was returned.
+         * The join, creates a single string of comma-separated employees 
+         * to make the record more readable
+         */
+        employees.forEach(department => {
+            table.push([department.department_name, department.employees.join(', ')]);
+        });
+    
+        // show the table
+        console.log(table.toString());
+    
+    } catch (error) {
+        console.error('Error retrieving employees:', error.message);
+    }
+
+    // return to the main menu
+    this.startCli();
+}
+
+    /********************************************
+     * Add methods
+     ***/
+   // TODO
+   async addDepartment() {
+    const answers = await inquirer.prompt([
+        {
+            type: 'input',
+            name: 'departmentName',
+            message: 'What is the name of the department?',
+            validate: input => validateInput(input),
+        }
+    ]);
+
+    let departmentName: string = toTitleCase(answers.departmentName);
+
+    try {
+        const roles = await addDepartmentSQL(departmentName);
+        console.log(`Added ${departmentName} to the database.`);
+    } catch (error) {
+        console.error('Error adding department:', error.message);
+    }
+    
+    // return to the main menu
+    this.startCli();
+}
+
+
+
+// TODO
+async addRole() {
+    // Get data to populate the prompt info
+    const departments = await viewAllDepartmentsSQL();
+
+    const answers = await inquirer.prompt([
+        {
+            type: 'input',
+            name: 'roleTitle',
+            message: 'What is the name of the role?',
+            validate: input => validateInput(input),
+        },
+        {
+            type: 'input',
+            name: 'roleSalary',
+            message: 'What is the salary of the role?',
+            validate: input => validateInput(input, true),
+        },
+        {
+            type: 'list',
+            name: 'departmentName',
+            message: 'Which department does the role belong to?',
+            choices: departments.map(department => department.department),
+        },
+    ]);
+
+    let roleTitle: string = toTitleCase(answers.roleTitle);
+
+    try {
+        const roles = await addRoleSQL(roleTitle, answers.roleSalary, answers.departmentName);
+        console.log(`Added ${roleTitle} to the database.`);
+    } catch (error) {
+        console.error('Error adding role:', error.message);
+    }
+
+    // return to the main menu
+    this.startCli();
+}
+
+    // TODO
+    async addEmployee() {   
+        // Get data to populate the prompt info
+        const roles = await viewRolesSQL();
+        const managers = await getAllManagers();
+    
+        // Prompt user for input
+        const answers = await inquirer.prompt([
+            {
+                type: 'input',
+                name: 'firstName',
+                message: "What is the employee's first name?",
+                validate: input => validateInput(input),
+            },
+            {
+                type: 'input',
+                name: 'lastName',
+                message: "What is the employee's last name?",
+                validate: input => validateInput(input),
+            },
+            {
+                type: 'list',
+                name: 'role',
+                message: "What is the employee's role?",
+                choices: roles.map(role => role.title),
+            },
+            {
+                type: 'list',
+                name: 'manager',
+                message: "Who is the employee's manager?",
+                choices: ['None', ...managers.map(manager => `${manager.manager}`)],
+            },
+        ]);
+        
+        let firstName: string = capitalize(answers.firstName);
+        let lastName: string = capitalize(answers.lastName);
+
+        try {
+            await addEmployeeSQL(
+                firstName,
+                lastName,
+                answers.role,
+                answers.manager
+            );
+            console.log(`Added ${firstName} ${lastName} to the database.`);
+        } catch (error) {
+            console.error('Error adding employee:', error.message);
+        }
+    
+        // return to the main menu
+        this.startCli();
+    }
+
+    /********************************************
+     * Update methods
+     ***/
+    // TODO
     async updateEmployeeRole() {
         // Get data to populate the prompt info
         const employees = await viewAllEmployeesSQL();
@@ -292,7 +426,6 @@ class Cli {
         // return to the main menu
         this.startCli();
     }
-
     // TODO
     // Intentionally not providing None/NULL choice. What's the point of
     // updating someone's manager to not having one?
@@ -347,60 +480,74 @@ class Cli {
         // return to the main menu
         this.startCli();
     }
+ 
 
+
+    /********************************************
+     * Delete methods
+     ***/
     // TODO
-    async addEmployee() {   
+    async deleteDepartment() {
         // Get data to populate the prompt info
-        const roles = await viewRolesSQL();
-        const managers = await getAllManagers();
-    
-        // Prompt user for input
+        const departments = await viewAllDepartmentsSQL();
+   
         const answers = await inquirer.prompt([
             {
-                type: 'input',
-                name: 'firstName',
-                message: "What is the employee's first name?",
-                validate: input => validateInput(input),
-            },
-            {
-                type: 'input',
-                name: 'lastName',
-                message: "What is the employee's last name?",
-                validate: input => validateInput(input),
-            },
-            {
                 type: 'list',
-                name: 'role',
-                message: "What is the employee's role?",
-                choices: roles.map(role => role.title),
-            },
-            {
-                type: 'list',
-                name: 'manager',
-                message: "Who is the employee's manager?",
-                choices: ['None', ...managers.map(manager => `${manager.manager}`)],
+                name: 'departmentName',
+                message: "Which department would you like to delete?",
+                choices: departments.map(department => department.department),
             },
         ]);
-        
-        let firstName: string = capitalize(answers.firstName);
-        let lastName: string = capitalize(answers.lastName);
-
+    
         try {
-            await addEmployeeSQL(
-                firstName,
-                lastName,
-                answers.role,
-                answers.manager
-            );
-            console.log(`Added ${firstName} ${lastName} to the database.`);
+            const result = await deleteDepartmentSQL(answers.departmentName);
+    
+            if (result) {
+                console.log(`Deleted department "${answers.departmentName}" from the database.`);
+            } else {
+                console.error(`Error deleting department "${answers.departmentName}".`);
+            }
         } catch (error) {
-            console.error('Error adding employee:', error.message);
+            console.error('Unexpected error while deleting department:', error.message);
         }
     
         // return to the main menu
         this.startCli();
     }
+
+
+    // TODO
+    async deleteRole() {
+        // Get data to populate the prompt info
+        const roles = await viewRolesSQL();
     
+        const answers = await inquirer.prompt([
+            {
+                type: 'list',
+                name: 'roleTitle',
+                message: "Which role would you like to delete?",
+                choices: roles.map(role => role.title),
+            },
+        ]);
+    
+        try {
+            const result = await deleteRoleSQL(answers.roleTitle);
+    
+            if (result) {
+                console.log(`Deleted role "${answers.roleTitle}" from the database.`);
+            } else {
+                console.error(`Error deleting role "${answers.roleTitle}".`);
+            }
+        } catch (error) {
+            console.error('Unexpected error while deleting role:', error.message);
+        }
+    
+        // return to the main menu
+        this.startCli();
+    }    
+    
+   
     // TODO
     async deleteEmployee() {
         // Get data to populate the prompt info
@@ -432,133 +579,9 @@ class Cli {
     }
 
 
-    // TODO
-    async viewAllEmployees() {
 
-        try {
-            const employees = await viewAllEmployeesSQL();
-        
-            // prepare the header format
-            const table = new Table({
-                head: ['ID', 'First Name', 'Last Name', 'Title', 'Department', 'Salary', 'Manager'],
-                colWidths: [10, 15, 15, 20, 20, 10, 30],
-            });
-        
-            // update the table with each employee record that was returned
-            employees.forEach(employee => {
-                table.push([employee.id, 
-                            employee.first_name, 
-                            employee.last_name, 
-                            employee.title, 
-                            employee.department, 
-                            employee.salary, 
-                            employee.manager]);
-            });
-        
-            // show the table
-            console.log(table.toString());
-        
-        } catch (error) {
-            console.error('Error retrieving employees:', error.message);
-        }
 
-        // return to the main menu
-        this.startCli();
-    }
 
-   // TODO
-   async viewDepartmentByBudget() {
-
-        try {
-            const departments = await viewDepartmentByBudgetSQL();
-        
-            // prepare the header format
-            const table = new Table({
-                head: ['Department', 'Budget'],
-                colWidths: [30, 9],
-            });
-        
-            // update the table with each dapartment record that was returned
-            departments.forEach(department => {
-                table.push([department.department_name, department.total_budget]);
-            });
-        
-            // show the table
-            console.log(table.toString());
-        
-        } catch (error) {
-            console.error('Error retrieving employees:', error.message);
-        }
-
-        // return to the main menu
-        this.startCli();
-    }
-
-    // TODO
-    async viewEmployeesByManager() {
-
-        try {
-            const employees = await viewEmployeesByManagerSQL();
-            console.log(employees)
-            // prepare the header format
-            const table = new Table({
-                head: ['Manager', 'Employees'],
-                colWidths: [30, 50],
-                wordWrap: true // dynamically resizes the employees column to handle the array
-            });
-        
-            /*
-             * Update the table with each record that was returned.
-             * The join, creates a single string of comma-separated employees 
-             * to make the record more readable
-             */
-            employees.forEach(manager => {
-                table.push([manager.managers, manager.employees.join(', ')]);
-            });
-        
-            // show the table
-            console.log(table.toString());
-        
-        } catch (error) {
-            console.error('Error retrieving employees:', error.message);
-        }
-
-        // return to the main menu
-        this.startCli();
-    }
-
-    // TODO
-    async viewEmployeesByDepartment() {
-
-        try {
-            const employees = await viewEmployeesByDepartmentSQL();
-            console.log(employees)
-            // prepare the header format
-            const table = new Table({
-                head: ['Department', 'Employees'],
-                colWidths: [30, 50],
-                wordWrap: true // dynamically resizes the employees column to handle the array
-            });
-        
-            /*
-             * Update the table with each record that was returned.
-             * The join, creates a single string of comma-separated employees 
-             * to make the record more readable
-             */
-            employees.forEach(department => {
-                table.push([department.department_name, department.employees.join(', ')]);
-            });
-        
-            // show the table
-            console.log(table.toString());
-        
-        } catch (error) {
-            console.error('Error retrieving employees:', error.message);
-        }
-
-        // return to the main menu
-        this.startCli();
-    }
 
     // TODO
     async startCli(): Promise<void> {
