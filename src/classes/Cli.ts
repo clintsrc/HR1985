@@ -313,7 +313,7 @@ class Cli {
             },
         ]);
 
-        // Filter out the selected employee from the managers list
+        // don't include the selected employee in the list of assignable managers
         managers = managers.filter(manager => 
             `${manager.manager}` !== `${answers.employee.first_name} ${answers.employee.last_name}`
         );
