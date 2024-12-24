@@ -1,3 +1,13 @@
+/*
+ * seeds.sql
+ *
+ * This scripts sets up the Employees database schema
+ 
+ * Run it from the PostgreSQL console, or use
+ *    psql -U postgres -f db/schema.sql
+ *
+ */
+
 -- ensure you're not connected to employees_db in caes it needs to be dropped
 \c employees_db
 -- helpful for troubleshooting your current connection
