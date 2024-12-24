@@ -271,7 +271,7 @@ class Cli {
 
         try {
             const employees = await viewEmployeesByManagerSQL();
-            console.log(employees)
+
             // prepare the header format
             const table = new Table({
                 head: ['Manager', 'Employees'],
@@ -313,7 +313,7 @@ class Cli {
 
         try {
             const employees = await viewEmployeesByDepartmentSQL();
-            console.log(employees)
+
             // prepare the header format
             const table = new Table({
                 head: ['Department', 'Employees'],
