@@ -11,6 +11,7 @@
 import { pool } from './connection.js';
 
 const DEBUG = false;
+const FOREIGN_KEY_VIOLATION_CODE = '23503';
 
 /* -------------------------
  * View / Read functions
@@ -39,7 +40,7 @@ const viewAllDepartmentsSQL = async () => {
         const result = await pool.query(query);
 
         if (DEBUG) {
-            console.info(`viewAllDepartmentsSQL: success\n${query}`);
+            console.debug(`viewAllDepartmentsSQL: success\n${query}`);
         }
 
         return result.rows;
@@ -83,7 +84,7 @@ const viewRolesSQL = async (
         const result = await pool.query(query);
 
         if (DEBUG) {
-            console.info(`viewRolesSQL: success\n${query}`);
+            console.debug(`viewRolesSQL: success\n${query}`);
         }
 
         return result.rows;
@@ -129,9 +130,11 @@ const viewAllEmployeesSQL = async () => {
 
     try {
         const result = await pool.query(query);
+
         if (DEBUG) {
-            console.info(`viewAllEmployeesSQL: success\n${query}`);
+            console.debug(`viewAllEmployeesSQL: success\n${query}`);
         }
+
         return result.rows;
     } catch (error) {
         console.error('Error fetching employees:', error.message);
@@ -178,7 +181,7 @@ const viewEmployeesByManagerSQL = async () => {
         const result = await pool.query(query);
 
         if (DEBUG) {
-            console.info(`viewEmployeesByManagerSQL: success\n${query}`);
+            console.debug(`viewEmployeesByManagerSQL: success\n${query}`);
         }
 
         return result.rows;
@@ -223,7 +226,7 @@ const viewEmployeesByDepartmentSQL = async () => {
         const result = await pool.query(query);
 
         if (DEBUG) {
-            console.info(`viewEmployeesByDepartmentSQL: success\n${query}`);
+            console.debug(`viewEmployeesByDepartmentSQL: success\n${query}`);
         }
 
         return result.rows;
@@ -268,7 +271,7 @@ const viewDepartmentByBudgetSQL = async () => {
         const result = await pool.query(query);
 
         if (DEBUG) {
-            console.info(`viewDepartmentByBudgetSQL: success\n${query}`);
+            console.debug(`viewDepartmentByBudgetSQL: success\n${query}`);
         }
 
         return result.rows;
@@ -306,9 +309,11 @@ const getAllManagers = async () => {
 
     try {
         const result = await pool.query(query);
+
         if (DEBUG) {
-            console.info(`getAllManagers: success\n${query}`);
+            console.debug(`getAllManagers: success\n${query}`);
         }
+
         return result.rows;
     } catch (error) {
         console.error('Error fetching managers:', error.message);
@@ -341,9 +346,8 @@ const addDepartmentSQL = async (
         await pool.query(query, params);
 
         if (DEBUG) {
-            console.log(
-                `addDepartmentSQL: Added "${departmentName}" to the database.\n
-                ${query}`
+            console.debug(
+                `addDepartmentSQL: Added "${departmentName}" to the database.\n${query}`
             );
         }
 
@@ -381,9 +385,8 @@ const addRoleSQL = async (
         await pool.query(query, params);
 
         if (DEBUG) {
-            console.log(
-                `addRoleSQL: Role "${roleTitle}" added successfully 
-                 in the "${departmentName}" department.\n${query}`
+            console.debug(
+                `addRoleSQL: Role "${roleTitle}" added successfully in the "${departmentName}" department.\n${query}`
             );
         }
 
@@ -430,10 +433,8 @@ const addEmployeeSQL = async (
         await pool.query(query, params);
 
         if (DEBUG) {
-            console.log(
-                `addEmployeeSQL: Employee successfully added: 
-                 ${firstName} ${lastName}, 
-                 ${roleTitle}, ${managerName}.\n${query}`
+            console.debug(
+                `addEmployeeSQL: Employee successfully added: ${firstName} ${lastName}, ${roleTitle}, ${managerName}.\n${query}`
             );
         }
     } catch (error) {
@@ -472,14 +473,10 @@ const updateEmployeeRoleSQL = async (
         const res = await pool.query(query, [newRole, employeeName]);
 
         if (DEBUG) {
-            console.log(
-                `updateEmployeeRoleSQL: 
-                 ${newRole} ${employeeName}
-                 \nRecords changed: 
-                 ${res.rowCount}\n${query}\n${query}`
+            console.debug(
+                `updateEmployeeRoleSQL: ${newRole} ${employeeName}\nRecords changed: ${res.rowCount}\n${query}\n${query}`
             );
         }
-
     } catch (error) {
         console.error('Error updating employee role:', error.message);
         throw error;
@@ -523,14 +520,12 @@ const updateEmployeeManagerSQL = async (
     try {
         const result = await pool.query(query, params);
 
-        console.log(
-            `updateEmployeeManagerSQL: Updated manager for "${employeeFirstName} 
-             ${employeeLastName}" to "${managerFirstName} ${managerLastName}".`
-        );
-
         if (DEBUG) {
-            console.log(`Records affected: ${result.rowCount}\nQuery: ${query}`);
+            console.debug(
+                `updateEmployeeManagerSQL: Updated manager for "${employeeFirstName} ${employeeLastName}" to "${managerFirstName} ${managerLastName}"\nQuery: ${query}`
+            );
         }
+
     } catch (error) {
         console.error('Error updating employee manager:', error.message);
         throw error;
@@ -562,14 +557,18 @@ const deleteDepartmentSQL = async (
 ): Promise<boolean> => {
     let bDeleteSuccess: boolean = false;
 
+    const query = `
+        SELECT COUNT(*) AS count
+        FROM role
+        WHERE department_id = (
+            SELECT id FROM department WHERE name = $1
+        )
+    `;
+
     try {
         // are any roles assigned to the department?
         const result = await pool.query(
-            `SELECT COUNT(*) AS count
-             FROM role
-             WHERE department_id = (
-                 SELECT id FROM department WHERE name = $1
-             )`, [departmentName]
+            query, [departmentName]
         );
 
         if (result.rows[0].count == 0) {    // dept not in use, safe to delete
@@ -577,16 +576,16 @@ const deleteDepartmentSQL = async (
                 DELETE FROM department
                 WHERE name = $1`, [departmentName]);
 
-            console.log(
-                `deleteDepartmentSQL: Department "${departmentName}" 
-                 deleted successfully.`
-            );
+            if (DEBUG) {
+                console.debug(
+                    `deleteDepartmentSQL: Department "${departmentName}" deleted successfully.\n${query}`
+                );
+            }
 
             bDeleteSuccess = true;
         } else {    // record is in use: don't delete it, inform the user
-            console.log(
-                `Department "${departmentName}" cannot be deleted while a role 
-                 is assigned to it.`
+            console.info(
+                `Department "${departmentName}" cannot be deleted while a role is assigned to it.`
             );
 
             bDeleteSuccess = false;
@@ -634,17 +633,14 @@ const deleteRoleSQL = async (
                 WHERE title = $1`, [roleTitle]);
 
             if (DEBUG) {
-                console.log(`deleteRoleSQL: Role "${roleTitle}" 
-                    deleted successfully.\n`);
+                console.debug(`deleteRoleSQL: Role "${roleTitle}" deleted successfully.\n`);
             }
-
+            
             bDeleteSuccess = true;
         } else {    // record is in use: don't delete it, inform the user
-            console.log(
-                `Role "${roleTitle}" cannot be deleted while there are 
-                 employees assigned to it.`
+            console.info(
+                `Role "${roleTitle}" cannot be deleted while there are employees assigned to it.`
             );
-
             bDeleteSuccess = false;
         }
     } catch (error) {
@@ -677,13 +673,16 @@ const deleteEmployeeSQL = async (
         await pool.query(query, params);
 
         if (DEBUG) {
-            console.log(
-                `deleteEmployeeSQL: Employee successfully deleted: 
-                ${employeeNameFirstName} ${employeeNameLastName}.\n${query}`
+            console.debug(
+                `deleteEmployeeSQL: Employee successfully deleted: ${employeeNameFirstName} ${employeeNameLastName}.\n${query}`
             );
         }
     } catch (error) {
-        console.error('Error deleting employee:', error.message);
+        if (FOREIGN_KEY_VIOLATION_CODE == error.code) {
+            console.error(`${employeeNameFirstName} ${employeeNameLastName} cannot be deleted because the employee is assigned as a manager of another employee.`);
+        } else {
+            console.error('Error deleting employee:', error.message);
+        }
         throw error;
     }
 };
