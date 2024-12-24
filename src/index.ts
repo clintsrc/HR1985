@@ -1,4 +1,4 @@
-/*
+/* -------------------------
  * Index
  *
  * This is the main startup script for the HR 1985 Employee
@@ -23,7 +23,7 @@
  * 5. Run the application from the project root using:
  *    npm run start
  * 
- */
+ * ------------------------- */
 
 import figlet from "figlet";
 import Cli from "./classes/Cli.js";

@@ -1,9 +1,10 @@
-/* 
+/* -------------------------
  * helperLib
  *
  * This module provides functions for commonly needed tasks that
  * the standard javascript library doesn't support
- */
+ * 
+ * ------------------------- */
 
 
 /*
@@ -67,8 +68,8 @@ const isValidUrl = (urlString: string): boolean => {
  */
 function toTitleCase(str: string): string {
     return str.split(' ')
-              .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-              .join(' ');
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
 }
 
 
@@ -95,7 +96,7 @@ function validateInput(input: string | number, isNumber: boolean = false): boole
     return true;
 }
 
-export { 
+export {
     capitalize,
     isValidUrl,
     toTitleCase,

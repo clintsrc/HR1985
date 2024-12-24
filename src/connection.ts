@@ -1,4 +1,4 @@
-/*
+/* -------------------------
  * connection
  *
  * This module handles the connection to the PostgreSQL database. It uses
@@ -6,7 +6,7 @@
  * for details). Once connected, the pg module provides a pool of connections 
  * for the application to use efficiently
  * 
- */
+ * ------------------------- */
 
 import dotenv from 'dotenv';
 dotenv.config();

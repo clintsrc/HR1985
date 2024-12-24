@@ -1,4 +1,4 @@
-/*
+/* -------------------------
  * queryservice
  *
  * This module uses the pg module's connection pool to interface with a 
@@ -6,17 +6,18 @@
  * are exported to a command line class where the user can select which 
  * operations to perform on the employee data
  * 
- */
+ * ------------------------- */
+
 import { pool } from './connection.js';
 
-const DEBUG = true; // TODO - change for final checkin
+const DEBUG = false;
 
-/********************************************
- * View / Read methods
- ***/
+/* -------------------------
+ * View / Read functions
+ * ------------------------- */
 
 /*
- * getAllDepartments()
+ * viewAllDepartmentsSQL()
  * 
  * Query the employees_db to return all departments
  * 
@@ -36,7 +37,7 @@ const viewAllDepartmentsSQL = async () => {
 
     try {
         const result = await pool.query(query);
-        
+
         if (DEBUG) {
             console.info(`viewAllDepartmentsSQL: success\n${query}`);
         }
@@ -49,15 +50,24 @@ const viewAllDepartmentsSQL = async () => {
 };
 
 /*
- * getAllRoles()
+ * viewRolesSQL()
  * 
  * Query the employees_db to return all employee roles.
  * It joins on the department table.
  * 
+ * Default select fields are specified, but the caller can optionally 
+ * override it with specific fields to extract a subset of the role info
+ * 
  * Return the result in an array of records
  * 
  */
-const viewRolesSQL = async (columns = ['role.id', 'role.title', 'department.name AS department', 'role.salary']) => {
+const viewRolesSQL = async (
+    columns = [
+        'role.id',
+        'role.title',
+        'department.name AS department',
+        'role.salary']
+) => {
     const query = `
         SELECT
             ${columns.join(', ')}
@@ -71,7 +81,7 @@ const viewRolesSQL = async (columns = ['role.id', 'role.title', 'department.name
 
     try {
         const result = await pool.query(query);
-        
+
         if (DEBUG) {
             console.info(`viewRolesSQL: success\n${query}`);
         }
@@ -86,10 +96,11 @@ const viewRolesSQL = async (columns = ['role.id', 'role.title', 'department.name
 /*
  * viewAllEmployeesSQL()
  * 
- * Query the employees_db to return all employee information.
- * It joins on the department and role tables. It also uses a self-join 
- * (LEFT JOIN) to get the manager's name by looking up the manager
- * in the same employee table.
+ * Retrieve all employee information
+ * 
+ * The query joins on the department and role tables. It also uses a self-join 
+ * (LEFT JOIN) to get the manager's name by looking up the manager in the same 
+ * employee table.
  * 
  * Return the result in an array of records
  * 
@@ -128,17 +139,21 @@ const viewAllEmployeesSQL = async () => {
     }
 };
 
-/*
-// TODO
-// The query is a 1-to-many, it aggregates the employees for each manager.
-// It uses a self-join (LEFT JOIN) to get the manager's name by looking up 
-// the manager in the same employee table.
-
-// It returns 2 fields:
-//  mangagers: the concatenated manager's first and last name
-//  employees: a sorted array with each employee's concatenated first and 
-//      last name
-*/
+/* 
+ * viewEmployeesByManagerSQL()
+ *
+ * Retrieves managers and all employees reporting to that manager.
+ *
+ * The query is a 1-to-many, it aggregates the employees for each manager.
+ * It uses a self-join (LEFT JOIN) to get the manager's name by looking up 
+ * the manager in the same employee table.
+ * 
+ * It returns 2 fields:
+ * mangagers: the concatenated manager's first and last name
+ * employees: a sorted array with each employee's concatenated first and 
+ *  last name
+ * 
+ */
 const viewEmployeesByManagerSQL = async () => {
     const query = `
         SELECT
@@ -161,7 +176,7 @@ const viewEmployeesByManagerSQL = async () => {
 
     try {
         const result = await pool.query(query);
-        
+
         if (DEBUG) {
             console.info(`viewEmployeesByManagerSQL: success\n${query}`);
         }
@@ -173,15 +188,19 @@ const viewEmployeesByManagerSQL = async () => {
     }
 };
 
-/*
-// TODO
-// The query is a 1-to-many. It aggregates the employees for each department.
-
-// It returns 2 fields:
-//  department_name
-//  employees: a sorted array with each employee's concatenated first and 
-//      last name
-*/
+/* 
+ * viewEmployeesByDepartmentSQL()
+ * 
+ * Retrieves departments and all employees assigned to that department
+ * 
+ * The query is a 1-to-many. It aggregates the employees for each department.
+ * 
+ * It returns 2 fields:
+ * department_name
+ * employees: a sorted array with each employee's concatenated first and
+ *  last name
+ * 
+ */
 const viewEmployeesByDepartmentSQL = async () => {
     const query = `
         SELECT
@@ -202,7 +221,7 @@ const viewEmployeesByDepartmentSQL = async () => {
 
     try {
         const result = await pool.query(query);
-        
+
         if (DEBUG) {
             console.info(`viewEmployeesByDepartmentSQL: success\n${query}`);
         }
@@ -214,18 +233,21 @@ const viewEmployeesByDepartmentSQL = async () => {
     }
 };
 
-/*
-// TODO
-// viewDepartmentByBudgetSQL()
-// This function provides a view oof the total utilized budget of a department
-// (i.e. the combined salaries of all employees in that department).
-// The query uses the SUM function, along with the GROUP BY clause, to 
-// calculate the total salary budget for each department according to the roles 
-// assigned to employees in each department.
-// The GROUP BY clause is what group the departments.
-// The query returns:
-//  department_name
-//  total_budget
+/* 
+ * viewDepartmentByBudgetSQL()
+ *
+ * Queries the employee database to report the total utilized budget of a 
+ * department (i.e. the combined salaries of all employees in that department).
+ * 
+ * The query uses the SUM function, along with the GROUP BY clause, to 
+ * calculate the total salary budget for each department according to the roles 
+ * assigned to employees in each department. The GROUP BY clause is what group 
+ * the departments.
+ * 
+ * The query returns:
+ *  department_name
+ *  total_budget
+ * 
  */
 const viewDepartmentByBudgetSQL = async () => {
     const query = `
@@ -244,7 +266,7 @@ const viewDepartmentByBudgetSQL = async () => {
 
     try {
         const result = await pool.query(query);
-        
+
         if (DEBUG) {
             console.info(`viewDepartmentByBudgetSQL: success\n${query}`);
         }
@@ -256,11 +278,19 @@ const viewDepartmentByBudgetSQL = async () => {
     }
 };
 
-
-
-/*
- * Get the list of unique manager entries
-*/
+/* 
+ * getAllManagers()
+ *
+ * Get the list of unique manager entries (currently only used for populating
+ * the inquirer prompt choices)
+ * 
+ * To SELECT DISTINCT is used to filter out duplicate entries. It also uses 
+ * a self-join (LEFT JOIN) to get the manager's name by looking up the manager
+ * in the same employee table.
+ * 
+ * It returns an array of the manager's name (first and last name concatenated)
+ * 
+ */
 const getAllManagers = async () => {
     const query = `
         SELECT DISTINCT
@@ -286,10 +316,18 @@ const getAllManagers = async () => {
     }
 };
 
-/********************************************
- * Add methods
- ***/
-// TODO
+/* -------------------------
+ * Add functions
+ * ------------------------- */
+
+/* 
+ * addDepartmentSQL()
+ *
+ * Updates the department table with the new department name
+ * 
+ * Raises an error if any issues occur
+ * 
+ */
 const addDepartmentSQL = async (
     departmentName: string,
 ): Promise<void> => {
@@ -303,16 +341,30 @@ const addDepartmentSQL = async (
         await pool.query(query, params);
 
         if (DEBUG) {
-            console.log(`addDepartmentSQL: Added "${departmentName}" to the database.\n${query}`);
+            console.log(
+                `addDepartmentSQL: Added "${departmentName}" to the database.\n
+                ${query}`
+            );
         }
-        
+
     } catch (error) {
         console.error('Error adding department:', error.message);
         throw error;
     }
 };
 
-// TODO
+/* 
+ * addRoleSQL()
+ *
+ * Adds a new record to the role table with the provided role title, salary,
+ * and department id.
+ * 
+ * The department name is passed in. A subquery uses the name to lookup the 
+ * department id.
+ * 
+ * Raises an error if any issues occur
+ * 
+ */
 const addRoleSQL = async (
     roleTitle: string,
     roleSalary: number,
@@ -327,9 +379,12 @@ const addRoleSQL = async (
 
     try {
         await pool.query(query, params);
-        
+
         if (DEBUG) {
-            console.log(`addRoleSQL: Role "${roleTitle}" added successfully in the "${departmentName}" department.\n${query}`);
+            console.log(
+                `addRoleSQL: Role "${roleTitle}" added successfully 
+                 in the "${departmentName}" department.\n${query}`
+            );
         }
 
     } catch (error) {
@@ -338,15 +393,15 @@ const addRoleSQL = async (
     }
 };
 
-// TODO
-/*
+/* 
  * addEmployeeSQL()
  *
- * Query notes:
- * - A subquery determines the role title
- * - A CASE statement is used to handle when the manager is not specified ('None'
- *   meaning NULL)
- * - revisit for better error handling
+ * Adds a new employee record to  the database
+ * 
+ * A subquery determines the role title. A CASE statement is used to handle 
+ * when the manager is not specified ('None' meaning NULL)
+ * 
+ * Raises an error if any issues occur
  * 
  */
 const addEmployeeSQL = async (
@@ -363,7 +418,9 @@ const addEmployeeSQL = async (
             (SELECT id FROM role WHERE title = $3),
             CASE 
                 WHEN $4 = 'None' THEN NULL 
-                ELSE (SELECT id FROM employee WHERE CONCAT(first_name, ' ', last_name) = $4)
+                ELSE (SELECT id FROM employee WHERE CONCAT(
+                   first_name, ' ', last_name) = $4
+                )
             END
         );
     `;
@@ -373,7 +430,11 @@ const addEmployeeSQL = async (
         await pool.query(query, params);
 
         if (DEBUG) {
-            console.log(`addEmployeeSQL: Employee successfully added: ${firstName} ${lastName}, ${roleTitle}, ${managerName}.\n${query}`);
+            console.log(
+                `addEmployeeSQL: Employee successfully added: 
+                 ${firstName} ${lastName}, 
+                 ${roleTitle}, ${managerName}.\n${query}`
+            );
         }
     } catch (error) {
         console.error('Error adding employee:', error.message);
@@ -381,10 +442,22 @@ const addEmployeeSQL = async (
     }
 };
 
-/********************************************
- * Update methods
- ***/
-// TODO
+/* -------------------------
+ * Update functions
+ * ------------------------- */
+
+/* 
+ * updateEmployeeRoleSQL()
+ * 
+ * Updates an existing employee role
+ * 
+ * It uses a subquery to lookup the role id by the role title input and
+ * checks if this concatenated employee first and last name matches the 
+ * employee name input
+ * 
+ * Raises an error if any issues occur
+ * 
+ */
 const updateEmployeeRoleSQL = async (
     newRole: string,
     employeeName: string
@@ -394,21 +467,38 @@ const updateEmployeeRoleSQL = async (
         SET role_id = (SELECT id FROM role WHERE title = $1)
         WHERE CONCAT(first_name, ' ', last_name) = $2;
     `;
-    
+
     try {
         const res = await pool.query(query, [newRole, employeeName]);
 
         if (DEBUG) {
-            console.log(`updateEmployeeRoleSQL: ${newRole} ${employeeName}\nRecords changed: ${res.rowCount}\n${query}\n${query}`);
+            console.log(
+                `updateEmployeeRoleSQL: 
+                 ${newRole} ${employeeName}
+                 \nRecords changed: 
+                 ${res.rowCount}\n${query}\n${query}`
+            );
         }
-        
+
     } catch (error) {
         console.error('Error updating employee role:', error.message);
         throw error;
     }
 }
 
-// TODO
+/* 
+ * updateEmployeeManagerSQL()
+ *
+ * Updates an employee's manager
+ * 
+ * The manager's first and last name are passed in and a subquery looks up
+ * that manager's employee id. The employee's record is determined by their
+ * first and last name in order to update that record's manager_id field with
+ * the manager's manager_id
+ * 
+ * Raises an error if any issues occur
+ * 
+ */
 const updateEmployeeManagerSQL = async (
     employeeFirstName: string,
     employeeLastName: string,
@@ -433,8 +523,11 @@ const updateEmployeeManagerSQL = async (
     try {
         const result = await pool.query(query, params);
 
-        console.log(`updateEmployeeManagerSQL: Updated manager for "${employeeFirstName} ${employeeLastName}" to "${managerFirstName} ${managerLastName}".`);
-        
+        console.log(
+            `updateEmployeeManagerSQL: Updated manager for "${employeeFirstName} 
+             ${employeeLastName}" to "${managerFirstName} ${managerLastName}".`
+        );
+
         if (DEBUG) {
             console.log(`Records affected: ${result.rowCount}\nQuery: ${query}`);
         }
@@ -444,19 +537,30 @@ const updateEmployeeManagerSQL = async (
     }
 };
 
-/********************************************
- * Delete methods
- ***/
+/* -------------------------
+ * Delete functions
+ * ------------------------- */
 
-// TODO
-// Delete the department only if there are no roles assigned to it:
-//    we don't want to make assumptions about what dependent data to
-//    destroy in the chain
-//
+/* 
+ * deleteDepartmentSQL()
+ *
+ * Deletes a department record
+ * 
+ * Uses a subquery to lookup the department id from the department name
+ * specified by the user
+ * 
+ * The spec doesn't indicate how to handle deleting a department when any 
+ * roles are assigned to it. In this case there will not be a deletion, 
+ * which is reported to the user. It makes sense not to make assumptions 
+ * about what dependent data should be destroyed in the chain
+ * 
+ * Raises an error if any issues occur
+ * 
+ */
 const deleteDepartmentSQL = async (
     departmentName: string
 ): Promise<boolean> => {
-    let  bDeleteSuccess: boolean = false;
+    let bDeleteSuccess: boolean = false;
 
     try {
         // are any roles assigned to the department?
@@ -468,17 +572,23 @@ const deleteDepartmentSQL = async (
              )`, [departmentName]
         );
 
-        if (result.rows[0].count == 0) {    // not in use, safe to delete
+        if (result.rows[0].count == 0) {    // dept not in use, safe to delete
             await pool.query(`
                 DELETE FROM department
                 WHERE name = $1`, [departmentName]);
 
-            console.log(`deleteDepartmentSQL: Department "${departmentName}" deleted successfully.`);
+            console.log(
+                `deleteDepartmentSQL: Department "${departmentName}" 
+                 deleted successfully.`
+            );
 
             bDeleteSuccess = true;
-        } else {    // don't delete when the record is in use, inform the user
-            console.log(`Department "${departmentName}" cannot be deleted while a role is assigned to it.`);
-            
+        } else {    // record is in use: don't delete it, inform the user
+            console.log(
+                `Department "${departmentName}" cannot be deleted while a role 
+                 is assigned to it.`
+            );
+
             bDeleteSuccess = false;
         }
     } catch (error) {
@@ -489,24 +599,27 @@ const deleteDepartmentSQL = async (
     return bDeleteSuccess;
 };
 
-
-
-     
-
-
-
-// TODO
-// Delete the role only if there are no employees assigned to it:
-//    we don't want to make assumptions about what dependent data to
-//    destroy in the chain
-//
+/* 
+ * deleteRoleSQL()
+ *
+ * Uses a subquery to lookup the role id from the role title specified by 
+ * the user
+ * 
+ * The spec doesn't indicate how to handle deleting a role when any 
+ * employees are assigned to it. In this case there will not be a deletion, 
+ * which is reported to the user. It makes sense not to make assumptions 
+ * about what dependent data should be destroyed in the chain
+ * 
+ * Raises an error if any issues occur
+ * 
+ */
 const deleteRoleSQL = async (
     roleTitle: string,
 ): Promise<boolean> => {
     let bDeleteSuccess: boolean = false;
 
     try {
-        // Is the role assigned to an employee
+        // Is the role assigned to an employee?
         const result = await pool.query(
             `SELECT COUNT(*) AS count 
             FROM employee 
@@ -515,18 +628,22 @@ const deleteRoleSQL = async (
             )`, [roleTitle]
         );
 
-        if (result.rows[0].count == 0) { // not in use, safe to delete
+        if (result.rows[0].count == 0) { // role not in use, safe to delete
             await pool.query(`
                 DELETE FROM role 
                 WHERE title = $1`, [roleTitle]);
-            
+
             if (DEBUG) {
-                console.log(`deleteRoleSQL: Role "${roleTitle}" deleted successfully.\n`);
+                console.log(`deleteRoleSQL: Role "${roleTitle}" 
+                    deleted successfully.\n`);
             }
 
-            bDeleteSuccess =  true;
-        } else {    // don't delete when the record is in use, inform the user
-            console.log(`Role "${roleTitle}" cannot be deleted while there are employees assigned to it.`);
+            bDeleteSuccess = true;
+        } else {    // record is in use: don't delete it, inform the user
+            console.log(
+                `Role "${roleTitle}" cannot be deleted while there are 
+                 employees assigned to it.`
+            );
 
             bDeleteSuccess = false;
         }
@@ -538,10 +655,14 @@ const deleteRoleSQL = async (
     return bDeleteSuccess;
 }
 
-
-
-
-// TODO
+/* 
+ * deleteEmployeeSQL()
+ *
+ * Deletes an employee record by first and last name
+ * 
+ * Raises an error if any issues occur
+ * 
+ */
 const deleteEmployeeSQL = async (
     employeeNameFirstName: string,
     employeeNameLastName: string
@@ -556,7 +677,10 @@ const deleteEmployeeSQL = async (
         await pool.query(query, params);
 
         if (DEBUG) {
-            console.log(`deleteEmployeeSQL: Employee successfully deleted: ${employeeNameFirstName} ${employeeNameLastName}.\n${query}`);
+            console.log(
+                `deleteEmployeeSQL: Employee successfully deleted: 
+                ${employeeNameFirstName} ${employeeNameLastName}.\n${query}`
+            );
         }
     } catch (error) {
         console.error('Error deleting employee:', error.message);
@@ -564,28 +688,20 @@ const deleteEmployeeSQL = async (
     }
 };
 
-
-
-
-
-
-
-
-
-export { 
-    viewAllDepartmentsSQL, 
-    viewRolesSQL, 
-    viewAllEmployeesSQL, 
-    viewEmployeesByManagerSQL, 
-    viewEmployeesByDepartmentSQL, 
-    viewDepartmentByBudgetSQL, 
-    getAllManagers, 
-    addDepartmentSQL, 
-    addRoleSQL, 
-    addEmployeeSQL, 
-    updateEmployeeRoleSQL, 
-    updateEmployeeManagerSQL, 
-    deleteDepartmentSQL, 
-    deleteRoleSQL, 
+export {
+    viewAllDepartmentsSQL,
+    viewRolesSQL,
+    viewAllEmployeesSQL,
+    viewEmployeesByManagerSQL,
+    viewEmployeesByDepartmentSQL,
+    viewDepartmentByBudgetSQL,
+    getAllManagers,
+    addDepartmentSQL,
+    addRoleSQL,
+    addEmployeeSQL,
+    updateEmployeeRoleSQL,
+    updateEmployeeManagerSQL,
+    deleteDepartmentSQL,
+    deleteRoleSQL,
     deleteEmployeeSQL
 };

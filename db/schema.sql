@@ -1,8 +1,9 @@
 /*
- * Schema.sql
+ * schema.sql
  *
- * This scripts sets up the Employees database schema
- * Run it from the PostgreSQL console, or use
+ * This scripts creates the Employees database and sets up the schema
+ *
+ * Run it from the PostgreSQL console, or use:
  *    psql -U postgres -f db/schema.sql
  *
  */
@@ -16,6 +17,7 @@ DROP DATABASE IF EXISTS employees_db;
 CREATE DATABASE employees_db;
 
 -- must be connected to employees_db to create the tables
+-- CASCADE will also delete the foreign key constraints in other tables.
 \c employees_db
 DROP TABLE IF EXISTS department CASCADE;
 CREATE TABLE department (
@@ -23,6 +25,7 @@ CREATE TABLE department (
   name VARCHAR(30) UNIQUE NOT NULL
 );
 
+-- CASCADE will also delete the foreign key constraints in other tables.
 DROP TABLE IF EXISTS role CASCADE;
 CREATE TABLE role (
   id SERIAL PRIMARY KEY,
