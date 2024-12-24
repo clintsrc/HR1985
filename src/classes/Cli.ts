@@ -18,7 +18,7 @@
 import Table from 'cli-table3'; // a little help with the console table output here
 import inquirer from "inquirer";
 import { connectToDb, disconnectFromDb } from '../connection.js';
-import { toTitleCase, capitalize, validateInput } from '../helperlib.js';
+import { capitalize, validateInput } from '../helperlib.js';
 
 import {
     viewAllDepartmentsSQL,
@@ -366,7 +366,7 @@ class Cli {
             }
         ]);
 
-        let departmentName: string = toTitleCase(answers.departmentName);
+        let departmentName: string = capitalize(answers.departmentName);
 
         try {
             const roles = await addDepartmentSQL(departmentName);
@@ -412,7 +412,7 @@ class Cli {
             },
         ]);
 
-        let roleTitle: string = toTitleCase(answers.roleTitle);
+        let roleTitle: string = capitalize(answers.roleTitle);
 
         try {
             const roles = await addRoleSQL(
