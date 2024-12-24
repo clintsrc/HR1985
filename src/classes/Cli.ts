@@ -600,7 +600,7 @@ class Cli {
                 answers.newManager.last_name
             );
             console.log(
-                `Updated ${answers.employee}'s manager to ${answers.newManager}.`
+                `Updated ${answers.employee.first_name} ${answers.employee.last_name}'s manager to ${answers.newManager.first_name} ${answers.newManager.last_name}.`
             );
         } catch (error) {
             console.error('Error updating employee\'s manager:', error.message);
